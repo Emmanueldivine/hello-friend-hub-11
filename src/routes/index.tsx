@@ -1,24 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Unieveryhelp — Assignment & Project Help for Students" },
+      {
+        name: "description",
+        content:
+          "Unieveryhelp is a student marketplace for assignment, project and academic support — post your work, get matched, and track delivery.",
+      },
+      { property: "og:title", content: "Unieveryhelp — Assignment & Project Help" },
+      {
+        property: "og:description",
+        content: "Student marketplace for assignment, project and academic support.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: StudentApp,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function StudentApp() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <iframe
+      title="Unieveryhelp student portal"
+      src="/student.html"
+      style={{ width: "100%", height: "100vh", border: 0, display: "block" }}
+    />
   );
 }
