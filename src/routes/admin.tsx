@@ -28,7 +28,9 @@ export const Route = createFileRoute("/admin")({
   component: AdminShell,
 });
 
-const NAV = [
+type NavItem = { to: string; label: string; area: string; exact?: boolean };
+
+const NAV: NavItem[] = [
   { to: "/admin", label: "Dashboard", area: "dashboard", exact: true },
   { to: "/admin/students", label: "User Management", area: "students" },
   { to: "/admin/vendors", label: "Vendor Management", area: "vendors" },
@@ -38,7 +40,7 @@ const NAV = [
   { to: "/admin/chats", label: "Chat Management", area: "chats" },
   { to: "/admin/sub-admins", label: "Sub-Admin Management", area: "subadmins" },
   { to: "/admin/settings", label: "Settings", area: "settings" },
-] as const;
+];
 
 function AdminLogin({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
@@ -104,11 +106,14 @@ function AdminLogin({ onDone }: { onDone: () => void }) {
 function NoAccess({ onClaimed }: { onClaimed: () => void }) {
   const [busy, setBusy] = useState(false);
 
-  const claim = async () => {
+  const claim = async (): Promise<void> => {
     setBusy(true);
     const { data, error } = await supabase.rpc("claim_super_admin" as never);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     if (data === "granted") {
       toast.success("You are now the super admin.");
       onClaimed();
@@ -183,7 +188,7 @@ function AdminShell() {
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to as string}
                 onClick={() => setOpen(false)}
                 className={`block rounded-lg px-3 py-2.5 text-sm transition-colors ${
                   active
