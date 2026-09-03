@@ -16,6 +16,7 @@ import { Route as AdminAssignmentsRouteImport } from './routes/admin/assignments
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
+import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const AdminVendorsRoute = AdminVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWalletRoute = AdminWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/students'
     | '/admin/vendors'
+    | '/admin/wallet'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/students'
     | '/admin/vendors'
+    | '/admin/wallet'
     | '/admin'
   id:
     | '__root__'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/admin/orders'
     | '/admin/students'
     | '/admin/vendors'
+    | '/admin/wallet'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -165,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVendorsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/wallet': {
+      id: '/admin/wallet'
+      path: '/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AdminWalletRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -173,6 +192,7 @@ interface AdminRouteChildren {
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
+  AdminWalletRoute: typeof AdminWalletRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -181,6 +201,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminOrdersRoute: AdminOrdersRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminVendorsRoute: AdminVendorsRoute,
+  AdminWalletRoute: AdminWalletRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
