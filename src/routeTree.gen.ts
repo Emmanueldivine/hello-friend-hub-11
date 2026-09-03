@@ -12,8 +12,13 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAssignmentsRouteImport } from './routes/admin/assignments'
+import { Route as AdminChatsRouteImport } from './routes/admin/chats'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
+import { Route as AdminSubAdminsRouteImport } from './routes/admin/sub-admins'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
+import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,9 +35,29 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAssignmentsRoute = AdminAssignmentsRouteImport.update({
+  id: '/assignments',
+  path: '/assignments',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminChatsRoute = AdminChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStudentsRoute = AdminStudentsRouteImport.update({
   id: '/students',
   path: '/students',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSubAdminsRoute = AdminSubAdminsRouteImport.update({
+  id: '/sub-admins',
+  path: '/sub-admins',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminVendorsRoute = AdminVendorsRouteImport.update({
@@ -40,39 +65,83 @@ const AdminVendorsRoute = AdminVendorsRouteImport.update({
   path: '/vendors',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWalletRoute = AdminWalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/chats': typeof AdminChatsRoute
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/chats': typeof AdminChatsRoute
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/assignments': typeof AdminAssignmentsRoute
+  '/admin/chats': typeof AdminChatsRoute
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
+  '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/admin/students' | '/admin/vendors' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/admin/assignments'
+    | '/admin/chats'
+    | '/admin/orders'
+    | '/admin/students'
+    | '/admin/sub-admins'
+    | '/admin/vendors'
+    | '/admin/wallet'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/students' | '/admin/vendors' | '/admin'
+  to:
+    | '/'
+    | '/admin/assignments'
+    | '/admin/chats'
+    | '/admin/orders'
+    | '/admin/students'
+    | '/admin/sub-admins'
+    | '/admin/vendors'
+    | '/admin/wallet'
+    | '/admin'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin/assignments'
+    | '/admin/chats'
+    | '/admin/orders'
     | '/admin/students'
+    | '/admin/sub-admins'
     | '/admin/vendors'
+    | '/admin/wallet'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -104,11 +173,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/assignments': {
+      id: '/admin/assignments'
+      path: '/assignments'
+      fullPath: '/admin/assignments'
+      preLoaderRoute: typeof AdminAssignmentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/chats': {
+      id: '/admin/chats'
+      path: '/chats'
+      fullPath: '/admin/chats'
+      preLoaderRoute: typeof AdminChatsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/students': {
       id: '/admin/students'
       path: '/students'
       fullPath: '/admin/students'
       preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sub-admins': {
+      id: '/admin/sub-admins'
+      path: '/sub-admins'
+      fullPath: '/admin/sub-admins'
+      preLoaderRoute: typeof AdminSubAdminsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/vendors': {
@@ -118,18 +215,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVendorsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/wallet': {
+      id: '/admin/wallet'
+      path: '/wallet'
+      fullPath: '/admin/wallet'
+      preLoaderRoute: typeof AdminWalletRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAssignmentsRoute: typeof AdminAssignmentsRoute
+  AdminChatsRoute: typeof AdminChatsRoute
+  AdminOrdersRoute: typeof AdminOrdersRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminSubAdminsRoute: typeof AdminSubAdminsRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
+  AdminWalletRoute: typeof AdminWalletRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAssignmentsRoute: AdminAssignmentsRoute,
+  AdminChatsRoute: AdminChatsRoute,
+  AdminOrdersRoute: AdminOrdersRoute,
   AdminStudentsRoute: AdminStudentsRoute,
+  AdminSubAdminsRoute: AdminSubAdminsRoute,
   AdminVendorsRoute: AdminVendorsRoute,
+  AdminWalletRoute: AdminWalletRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
