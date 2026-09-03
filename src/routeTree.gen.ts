@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 
@@ -30,6 +31,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOrdersRoute = AdminOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminStudentsRoute = AdminStudentsRouteImport.update({
   id: '/students',
   path: '/students',
@@ -44,12 +50,14 @@ const AdminVendorsRoute = AdminVendorsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin': typeof AdminIndexRoute
@@ -58,19 +66,27 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/admin/orders': typeof AdminOrdersRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/admin/students' | '/admin/vendors' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/admin/orders'
+    | '/admin/students'
+    | '/admin/vendors'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin/students' | '/admin/vendors' | '/admin'
+  to: '/' | '/admin/orders' | '/admin/students' | '/admin/vendors' | '/admin'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin/orders'
     | '/admin/students'
     | '/admin/vendors'
     | '/admin/'
@@ -104,6 +120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/orders': {
+      id: '/admin/orders'
+      path: '/orders'
+      fullPath: '/admin/orders'
+      preLoaderRoute: typeof AdminOrdersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/students': {
       id: '/admin/students'
       path: '/students'
@@ -122,12 +145,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminOrdersRoute: typeof AdminOrdersRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminVendorsRoute: typeof AdminVendorsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminOrdersRoute: AdminOrdersRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminVendorsRoute: AdminVendorsRoute,
   AdminIndexRoute: AdminIndexRoute,
