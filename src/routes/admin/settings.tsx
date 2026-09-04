@@ -138,14 +138,42 @@ function Settings() {
         </Card>
 
         <Card className="p-6">
+          <h3 className="mb-4 text-sm font-bold">Change email</h3>
+          <form className="mb-8 space-y-4" onSubmit={changeEmail}>
+            <div className="space-y-1.5">
+              <Label htmlFor="set-email">Login email</Label>
+              <Input
+                id="set-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <Button type="submit" disabled={busy}>
+              Update email
+            </Button>
+          </form>
+
           <h3 className="mb-4 text-sm font-bold">Change password</h3>
           <form className="space-y-4" onSubmit={changePassword}>
+            <div className="space-y-1.5">
+              <Label htmlFor="set-current">Current password</Label>
+              <Input
+                id="set-current"
+                type="password"
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="set-pass">New password</Label>
               <Input
                 id="set-pass"
                 type="password"
                 minLength={8}
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -159,6 +187,7 @@ function Settings() {
             Settings and Sub-Admin Management are restricted to the super admin at all times.
           </p>
         </Card>
+
       </div>
     </>
   );
