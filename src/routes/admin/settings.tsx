@@ -23,8 +23,11 @@ function Settings() {
   const { session, refetch } = useAdminAuth();
   const [fullName, setFullName] = useState(session?.fullName ?? "");
   const [avatarUrl, setAvatarUrl] = useState(session?.avatarUrl ?? "");
+  const [email, setEmail] = useState(session?.email ?? "");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+
 
   const { data: counts } = useQuery({
     queryKey: ["admin-settings-counts"],
