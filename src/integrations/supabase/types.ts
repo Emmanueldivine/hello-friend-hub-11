@@ -387,6 +387,7 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      super_admin_exists: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "student" | "vendor" | "admin" | "super_admin"
