@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { clearLegacyStorage } from "@/lib/clear-legacy-storage";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -42,6 +45,128 @@ const NAV: NavItem[] = [
   { to: "/admin/settings", label: "Settings", area: "settings" },
 ];
 
+function Brand() {
+  return (
+    <div className="mb-6 flex items-center gap-3">
+      <span className="grid size-10 place-items-center rounded-xl bg-accent font-black text-accent-foreground">
+        UH
+      </span>
+      <div>
+        <h1 className="text-lg font-bold leading-tight">Unieveryhelp Admin</h1>
+        <p className="text-xs text-muted-foreground">Staff access only</p>
+      </div>
+    </div>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-sidebar px-4 py-10">
+      <Card className="w-full max-w-sm p-8">{children}</Card>
+    </main>
+  );
+}
+
+function SetupSuperAdmin({ onDone }: { onDone: () => void }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    try {
+      let { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.origin + "/admin" },
+      });
+      // Account may already exist from an earlier attempt — sign in instead.
+      if (error) {
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        if (retry.error) throw new Error(error.message);
+        data = retry.data as typeof data;
+      }
+      if (!data.session) {
+        const retry = await supabase.auth.signInWithPassword({ email, password });
+        if (retry.error) throw new Error(retry.error.message);
+      }
+      const { data: claim, error: claimError } = await supabase.rpc("claim_super_admin" as never);
+      if (claimError) throw new Error(claimError.message);
+      if (claim === "exists") {
+        toast.error("A super admin already exists. Please sign in instead.");
+      } else {
+        await supabase.from("profiles").upsert({
+          id: (await supabase.auth.getUser()).data.user!.id,
+          full_name: email.split("@")[0] ?? "Super Admin",
+          email,
+        });
+        toast.success("Super admin account created. You are signed in.");
+      }
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not create the account.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Shell>
+      <Brand />
+      <h2 className="mb-1 text-base font-bold">Create Super Admin Account</h2>
+      <p className="mb-5 text-xs text-muted-foreground">
+        No admin exists yet. This one-time setup creates the owner account for Unieveryhelp.
+      </p>
+      <form className="space-y-4" onSubmit={submit}>
+        <div className="space-y-1.5">
+          <Label htmlFor="su-email">Email</Label>
+          <Input
+            id="su-email"
+            type="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="su-pass">Password</Label>
+          <Input
+            id="su-pass"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="su-confirm">Confirm password</Label>
+          <Input
+            id="su-confirm"
+            type="password"
+            minLength={8}
+            autoComplete="new-password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? "Creating…" : "Create super admin"}
+        </Button>
+      </form>
+    </Shell>
+  );
+}
+
 function AdminLogin({ onDone }: { onDone: () => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,87 +184,73 @@ function AdminLogin({ onDone }: { onDone: () => void }) {
     onDone();
   };
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-sidebar px-4">
-      <Card className="w-full max-w-sm p-8">
-        <div className="mb-6 flex items-center gap-3">
-          <span className="grid size-10 place-items-center rounded-xl bg-accent font-black text-accent-foreground">
-            UH
-          </span>
-          <div>
-            <h1 className="text-lg font-bold leading-tight">Unieveryhelp Admin</h1>
-            <p className="text-xs text-muted-foreground">Staff access only</p>
-          </div>
-        </div>
-        <form className="space-y-4" onSubmit={submit}>
-          <div className="space-y-1.5">
-            <Label htmlFor="admin-email">Email</Label>
-            <Input
-              id="admin-email"
-              type="email"
-              value={email}
-              autoComplete="username"
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="admin-password">Password</Label>
-            <Input
-              id="admin-password"
-              type="password"
-              value={password}
-              autoComplete="current-password"
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={busy}>
-            {busy ? "Signing in…" : "Sign in"}
-          </Button>
-        </form>
-      </Card>
-    </main>
-  );
-}
-
-function NoAccess({ onClaimed }: { onClaimed: () => void }) {
-  const [busy, setBusy] = useState(false);
-
-  const claim = async (): Promise<void> => {
-    setBusy(true);
-    const { data, error } = await supabase.rpc("claim_super_admin" as never);
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
+  const reset = async () => {
+    if (!email) {
+      toast.error("Enter your email first, then click reset.");
       return;
     }
-    if (data === "granted") {
-      toast.success("You are now the super admin.");
-      onClaimed();
-    } else if (data === "exists") {
-      toast.error("A super admin already exists. Ask them for access.");
-    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
+    });
+    if (error) toast.error(error.message);
+    else toast.success("Password reset link sent to your email.");
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-sidebar px-4">
-      <Card className="w-full max-w-md space-y-4 p-8 text-center">
+    <Shell>
+      <Brand />
+      <form className="space-y-4" onSubmit={submit}>
+        <div className="space-y-1.5">
+          <Label htmlFor="admin-email">Email</Label>
+          <Input
+            id="admin-email"
+            type="email"
+            value={email}
+            autoComplete="username"
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="admin-password">Password</Label>
+          <Input
+            id="admin-password"
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+        <Button type="submit" className="w-full" disabled={busy}>
+          {busy ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
+      <button
+        type="button"
+        onClick={reset}
+        className="mt-4 w-full text-xs text-muted-foreground underline underline-offset-4"
+      >
+        Forgot password?
+      </button>
+    </Shell>
+  );
+}
+
+function NoAccess() {
+  return (
+    <Shell>
+      <div className="space-y-4 text-center">
         <h1 className="text-xl font-bold">No admin access</h1>
         <p className="text-sm text-muted-foreground">
-          This account is signed in but has no admin role. If you are the owner and no super admin
-          exists yet, claim the super admin seat once.
+          This account is signed in but has no admin role. Ask the super admin to create a sub-admin
+          account for you.
         </p>
-        <div className="flex justify-center gap-2">
-          <Button onClick={claim} disabled={busy}>
-            Claim super admin
-          </Button>
-          <Button variant="outline" onClick={() => supabase.auth.signOut()}>
-            Sign out
-          </Button>
-        </div>
-      </Card>
-    </main>
+        <Button variant="outline" onClick={() => supabase.auth.signOut()}>
+          Sign out
+        </Button>
+      </div>
+    </Shell>
   );
 }
 
@@ -148,15 +259,37 @@ function AdminShell() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    clearLegacyStorage();
+  }, []);
+
+  const setupState = useQuery({
+    queryKey: ["super-admin-exists"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("super_admin_exists" as never);
+      if (error) throw error;
+      return Boolean(data);
+    },
+  });
+
+  if (loading || setupState.isLoading) {
     return (
       <main className="grid min-h-screen place-items-center bg-sidebar text-sidebar-foreground">
         <p className="text-sm">Loading admin…</p>
       </main>
     );
   }
-  if (!session) return <AdminLogin onDone={() => refetch()} />;
-  if (!session.isAdmin) return <NoAccess onClaimed={() => refetch()} />;
+
+  const done = () => {
+    refetch();
+    setupState.refetch();
+  };
+
+  if (!session) {
+    return setupState.data === false ? <SetupSuperAdmin onDone={done} /> : <AdminLogin onDone={done} />;
+  }
+  if (!session.isAdmin) return <NoAccess />;
+
 
   const items = NAV.filter((item) => can(item.area));
   const initials = session.fullName
