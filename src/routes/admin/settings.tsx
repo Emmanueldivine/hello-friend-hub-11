@@ -64,18 +64,39 @@ function Settings() {
     refetch();
   };
 
+  const changeEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser({ email });
+    if (!error && session) {
+      await supabase.from("profiles").update({ email }).eq("id", session.userId);
+    }
+    setBusy(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Email updated");
+    refetch();
+  };
+
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await supabase.auth.updateUser({
+      password,
+      ...(currentPassword ? { current_password: currentPassword } : {}),
+    } as Parameters<typeof supabase.auth.updateUser>[0]);
     setBusy(false);
     if (error) {
       toast.error(error.message);
       return;
     }
     setPassword("");
+    setCurrentPassword("");
     toast.success("Password changed");
   };
+
 
   return (
     <>
