@@ -169,6 +169,7 @@ export type Database = {
           commission: number
           created_at: string
           id: string
+          progress: number
           reference: string
           status: Database["public"]["Enums"]["order_status"]
           student_id: string | null
@@ -181,6 +182,7 @@ export type Database = {
           commission?: number
           created_at?: string
           id?: string
+          progress?: number
           reference?: string
           status?: Database["public"]["Enums"]["order_status"]
           student_id?: string | null
@@ -193,6 +195,7 @@ export type Database = {
           commission?: number
           created_at?: string
           id?: string
+          progress?: number
           reference?: string
           status?: Database["public"]["Enums"]["order_status"]
           student_id?: string | null
