@@ -8,6 +8,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminRealtime } from "@/hooks/useAdminRealtime";
+
 import { clearLegacyStorage } from "@/lib/clear-legacy-storage";
 import { supabase } from "@/integrations/supabase/client";
 
