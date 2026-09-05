@@ -258,6 +258,8 @@ function AdminShell() {
   const { session, can, loading, refetch } = useAdminAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
+  useAdminRealtime();
+
 
   useEffect(() => {
     clearLegacyStorage();
