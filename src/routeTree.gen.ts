@@ -21,6 +21,7 @@ import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin/sub-admins'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
+import { Route as ApiPublicStudentSyncRouteImport } from './routes/api/public/student-sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const AdminWalletRoute = AdminWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicStudentSyncRoute = ApiPublicStudentSyncRouteImport.update({
+  id: '/api/public/student-sync',
+  path: '/api/public/student-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin': typeof AdminIndexRoute
+  '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/': typeof AdminIndexRoute
+  '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin/'
+    | '/api/public/student-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin'
+    | '/api/public/student-sync'
   id:
     | '__root__'
     | '/'
@@ -167,12 +178,14 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin/'
+    | '/api/public/student-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicStudentSyncRoute: typeof ApiPublicStudentSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWalletRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/student-sync': {
+      id: '/api/public/student-sync'
+      path: '/api/public/student-sync'
+      fullPath: '/api/public/student-sync'
+      preLoaderRoute: typeof ApiPublicStudentSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -294,6 +314,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicStudentSyncRoute: ApiPublicStudentSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
