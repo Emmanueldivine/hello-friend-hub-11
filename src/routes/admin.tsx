@@ -11,6 +11,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminRealtime } from "@/hooks/useAdminRealtime";
 
 import { clearLegacyStorage } from "@/lib/clear-legacy-storage";
+import { claimSuperAdmin, superAdminExists } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 
