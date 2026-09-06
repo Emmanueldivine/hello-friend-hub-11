@@ -29,21 +29,6 @@
     if (!id) return null;
 
     var assignments = read("assignments_" + id) || read("assignments") || [];
-    var walletRaw = read("wallet_" + id);
-    if (walletRaw === null) walletRaw = read("unieveryhelp_wallet");
-    var wallet = typeof walletRaw === "number" ? walletRaw : Number(walletRaw && walletRaw.balance) || 0;
-
-    var history = read("history_" + id) || [];
-    var transactions = (Array.isArray(history) ? history : []).map(function (h, i) {
-      return {
-        id: String(h.id || h.reference || id + "-tx-" + i),
-        reference: h.reference ? String(h.reference) : undefined,
-        amount: h.amount,
-        type: h.type || "funding",
-        status: h.status || "success",
-      };
-    });
-
     var chats = [];
     for (var i = 0; i < localStorage.length; i++) {
       var key = localStorage.key(i);
@@ -90,21 +75,34 @@
           createdAt: String(a.createdAt || ""),
         };
       }),
-      wallet: wallet,
-      transactions: transactions,
       chats: chats,
     };
+  }
+
+  function accessToken() {
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (!key || key.indexOf("sb-") !== 0 || key.indexOf("-auth-token") === -1) continue;
+      var session = read(key);
+      if (session && typeof session.access_token === "string") return session.access_token;
+    }
+    return "";
   }
 
   function sync() {
     var payload = collect();
     if (!payload) return;
+    var token = accessToken();
+    if (!token) return;
     var signature = JSON.stringify(payload);
     if (signature === LAST) return;
     LAST = signature;
     fetch("/api/public/student-sync", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token,
+      },
       body: signature,
     }).catch(function () {
       LAST = "";
