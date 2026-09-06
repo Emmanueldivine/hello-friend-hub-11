@@ -12,10 +12,47 @@ const createSchema = z.object({
 });
 
 async function assertSuperAdmin(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("is_super_admin", { _user_id: userId });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "super_admin")
+    .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Only the super admin can manage sub-admins.");
 }
+
+export const superAdminExists = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("id")
+    .eq("role", "super_admin")
+    .limit(1);
+  if (error) throw new Error(error.message);
+  return { exists: (data?.length ?? 0) > 0 };
+});
+
+export const claimSuperAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ fullName: z.string().min(1), email: z.string().email() }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing, error } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("role", "super_admin")
+      .limit(1);
+    if (error) throw new Error(error.message);
+    if ((existing?.length ?? 0) > 0) return { status: "exists" as const };
+
+    await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "super_admin" });
+    await supabaseAdmin
+      .from("profiles")
+      .upsert({ id: context.userId, full_name: data.fullName, email: data.email });
+    return { status: "granted" as const };
+  });
+
 
 export const createSubAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
