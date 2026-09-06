@@ -267,9 +267,8 @@ function AdminShell() {
   const setupState = useQuery({
     queryKey: ["super-admin-exists"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("super_admin_exists" as never);
-      if (error) throw error;
-      return Boolean(data);
+      const res = await superAdminExists();
+      return Boolean(res.exists);
     },
   });
 
