@@ -47,25 +47,27 @@
     var chats = [];
     for (var i = 0; i < localStorage.length; i++) {
       var key = localStorage.key(i);
-      if (!key || key.indexOf("chat_" + id + "_") !== 0) continue;
+      if (!key || key.indexOf("chat_") !== 0) continue;
       var thread = read(key);
       if (!Array.isArray(thread) || !thread.length) continue;
+      var msgs = thread
+        .filter(function (m) {
+          return m && m.type !== "log" && (m.text || m.body);
+        })
+        .slice(-200)
+        .map(function (m) {
+          return {
+            id: String(m.id || ""),
+            from: String(m.from || m.sender || ""),
+            text: String(m.text || m.body).slice(0, 4000),
+            at: String(m.at || m.time || ""),
+          };
+        });
+      if (!msgs.length) continue;
       chats.push({
         key: key,
         staffName: (thread[0] && thread[0].staffName) || key.split("_").pop(),
-        messages: thread
-          .filter(function (m) {
-            return m && (m.text || m.body);
-          })
-          .slice(-200)
-          .map(function (m) {
-            return {
-              id: String(m.id || ""),
-              from: String(m.from || m.sender || ""),
-              text: String(m.text || m.body).slice(0, 4000),
-              at: String(m.at || m.time || ""),
-            };
-          }),
+        messages: msgs,
       });
     }
 
