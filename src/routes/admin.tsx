@@ -11,6 +11,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminRealtime } from "@/hooks/useAdminRealtime";
 
 import { clearLegacyStorage } from "@/lib/clear-legacy-storage";
+import { claimSuperAdmin, superAdminExists } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -98,16 +99,12 @@ function SetupSuperAdmin({ onDone }: { onDone: () => void }) {
         const retry = await supabase.auth.signInWithPassword({ email, password });
         if (retry.error) throw new Error(retry.error.message);
       }
-      const { data: claim, error: claimError } = await supabase.rpc("claim_super_admin" as never);
-      if (claimError) throw new Error(claimError.message);
-      if (claim === "exists") {
+      const claim = await claimSuperAdmin({
+        data: { fullName: email.split("@")[0] ?? "Super Admin", email },
+      });
+      if (claim.status === "exists") {
         toast.error("A super admin already exists. Please sign in instead.");
       } else {
-        await supabase.from("profiles").upsert({
-          id: (await supabase.auth.getUser()).data.user!.id,
-          full_name: email.split("@")[0] ?? "Super Admin",
-          email,
-        });
         toast.success("Super admin account created. You are signed in.");
       }
       onDone();
@@ -270,9 +267,8 @@ function AdminShell() {
   const setupState = useQuery({
     queryKey: ["super-admin-exists"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("super_admin_exists" as never);
-      if (error) throw error;
-      return Boolean(data);
+      const res = await superAdminExists();
+      return Boolean(res.exists);
     },
   });
 
