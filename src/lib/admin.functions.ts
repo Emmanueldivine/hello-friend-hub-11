@@ -111,8 +111,13 @@ export const deleteSubAdmin = createServerFn({ method: "POST" })
     await assertSuperAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: isSuper } = await supabaseAdmin.rpc("is_super_admin", { _user_id: data.adminId });
-    if (isSuper) throw new Error("A super admin account cannot be removed.");
+    const { data: superRows } = await supabaseAdmin
+      .from("user_roles")
+      .select("id")
+      .eq("user_id", data.adminId)
+      .eq("role", "super_admin")
+      .limit(1);
+    if ((superRows?.length ?? 0) > 0) throw new Error("A super admin account cannot be removed.");
 
     await supabaseAdmin.from("admin_permissions").delete().eq("admin_id", data.adminId);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.adminId);
