@@ -73,10 +73,28 @@
           status: String(a.status || "Received"),
           progress: Number(a.progress) || 0,
           createdAt: String(a.createdAt || ""),
+          deadline: deadlineIso(a),
+          files: [a.fileName, a.staffFileName]
+            .filter(function (n) { return n; })
+            .map(function (n) { return String(n).slice(0, 300); }),
         };
       }),
       chats: chats,
     };
+  }
+
+  /* Student portal stores either a real date or a number of hours. */
+  function deadlineIso(a) {
+    var raw = a && a.deadline;
+    if (raw === null || raw === undefined || raw === "") return "";
+    var hours = Number(raw);
+    if (Number.isFinite(hours) && String(raw).length < 6) {
+      var start = a.createdAt ? new Date(a.createdAt) : new Date();
+      if (isNaN(start.getTime())) start = new Date();
+      return new Date(start.getTime() + hours * 3600000).toISOString();
+    }
+    var d = new Date(raw);
+    return isNaN(d.getTime()) ? "" : d.toISOString();
   }
 
   function accessToken() {
@@ -109,6 +127,44 @@
     });
   }
 
+  /* Pull delivery updates made by admins/sub-admins so the progress bar
+     flips to 100% completed with a download link, without touching the
+     progress bar logic itself. */
+  function pull() {
+    var token = accessToken();
+    if (!token) return;
+    var u = currentUser();
+    var id = uid(u);
+    if (!id) return;
+    fetch("/api/public/order-status", { headers: { Authorization: "Bearer " + token } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (res) {
+        if (!res || !Array.isArray(res.orders)) return;
+        var key = localStorage.getItem("assignments_" + id) !== null
+          ? "assignments_" + id
+          : "assignments";
+        var list = read(key);
+        if (!Array.isArray(list) || !list.length) return;
+        var changed = false;
+        res.orders.forEach(function (o) {
+          if (o.status !== "completed" || !o.downloadUrl) return;
+          list.forEach(function (a) {
+            if (String(a.id) !== String(o.assignmentId)) return;
+            if (a.status === "completed" && a.staffFile === o.downloadUrl) return;
+            a.status = "completed";
+            a.staffFile = o.downloadUrl;
+            a.staffFileName = o.fileName || (a.title || "assignment") + ".file";
+            a.completedAt = o.completedAt || new Date().toISOString();
+            changed = true;
+          });
+        });
+        if (!changed) return;
+        setItem(key, JSON.stringify(list));
+        window.dispatchEvent(new Event("hashchange"));
+      })
+      .catch(function () {});
+  }
+
   function schedule() {
     clearTimeout(TIMER);
     TIMER = setTimeout(sync, 800);
@@ -121,5 +177,7 @@
   };
 
   window.addEventListener("load", schedule);
+  window.addEventListener("load", pull);
   setInterval(sync, 20000);
+  setInterval(pull, 4000);
 })();
