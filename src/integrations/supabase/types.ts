@@ -167,11 +167,18 @@ export type Database = {
           amount: number
           assignment_id: string | null
           commission: number
+          completed_at: string | null
+          course_code: string | null
           created_at: string
+          deadline: string | null
+          description: string | null
+          final_file_name: string | null
+          final_file_url: string | null
           id: string
           progress: number
           reference: string
           status: Database["public"]["Enums"]["order_status"]
+          student_files: Json
           student_id: string | null
           title: string
           vendor_id: string | null
@@ -180,11 +187,18 @@ export type Database = {
           amount?: number
           assignment_id?: string | null
           commission?: number
+          completed_at?: string | null
+          course_code?: string | null
           created_at?: string
+          deadline?: string | null
+          description?: string | null
+          final_file_name?: string | null
+          final_file_url?: string | null
           id?: string
           progress?: number
           reference?: string
           status?: Database["public"]["Enums"]["order_status"]
+          student_files?: Json
           student_id?: string | null
           title?: string
           vendor_id?: string | null
@@ -193,11 +207,18 @@ export type Database = {
           amount?: number
           assignment_id?: string | null
           commission?: number
+          completed_at?: string | null
+          course_code?: string | null
           created_at?: string
+          deadline?: string | null
+          description?: string | null
+          final_file_name?: string | null
+          final_file_url?: string | null
           id?: string
           progress?: number
           reference?: string
           status?: Database["public"]["Enums"]["order_status"]
+          student_files?: Json
           student_id?: string | null
           title?: string
           vendor_id?: string | null

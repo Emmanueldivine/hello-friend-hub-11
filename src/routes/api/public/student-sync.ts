@@ -28,6 +28,9 @@ const payloadSchema = z.object({
         status: z.string().max(60).optional(),
         progress: z.number().optional(),
         createdAt: z.string().max(60).optional(),
+        deadline: z.string().max(60).optional(),
+        files: z.array(z.string().max(300)).max(20).optional(),
+
       }),
     )
     .max(200)
@@ -107,14 +110,27 @@ export const Route = createFileRoute("/api/public/student-sync")({
         // 2. Orders from student assignments
         for (const a of data.assignments ?? []) {
           const reference = `UH-${a.id}`;
-          const row = {
-            reference,
-            student_id: studentId,
+          const deadlineDate = a.deadline ? new Date(a.deadline) : null;
+
+          const deadline =
+            deadlineDate && !Number.isNaN(deadlineDate.getTime())
+              ? deadlineDate.toISOString()
+              : null;
+          const details = {
             title: a.title?.trim() || a.courseCode || "Assignment order",
             amount: num(a.price),
             commission: Math.round(num(a.price) * 0.15 * 100) / 100,
+            description: a.description?.trim() || null,
+            course_code: a.courseCode?.trim() || null,
+            deadline,
+            student_files: a.files ?? [],
+          };
+          const row = {
+            reference,
+            student_id: studentId,
             status: "pending" as const,
             progress: 0,
+            ...details,
           };
           const { data: found } = await supabaseAdmin
             .from("orders")
@@ -122,10 +138,8 @@ export const Route = createFileRoute("/api/public/student-sync")({
             .eq("reference", reference)
             .maybeSingle();
           if (found) {
-            await supabaseAdmin
-              .from("orders")
-              .update({ title: row.title, amount: row.amount, commission: row.commission })
-              .eq("id", found.id);
+            await supabaseAdmin.from("orders").update(details).eq("id", found.id);
+
           } else {
             await supabaseAdmin.from("orders").insert(row);
           }
