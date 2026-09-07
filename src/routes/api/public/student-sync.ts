@@ -110,9 +110,8 @@ export const Route = createFileRoute("/api/public/student-sync")({
         // 2. Orders from student assignments
         for (const a of data.assignments ?? []) {
           const reference = `UH-${a.id}`;
-          const row = {
-            reference,
           const deadlineDate = a.deadline ? new Date(a.deadline) : null;
+
           const deadline =
             deadlineDate && !Number.isNaN(deadlineDate.getTime())
               ? deadlineDate.toISOString()
