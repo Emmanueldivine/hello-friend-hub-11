@@ -28,6 +28,9 @@ const payloadSchema = z.object({
         status: z.string().max(60).optional(),
         progress: z.number().optional(),
         createdAt: z.string().max(60).optional(),
+        deadline: z.string().max(60).optional(),
+        files: z.array(z.string().max(300)).max(20).optional(),
+
       }),
     )
     .max(200)
