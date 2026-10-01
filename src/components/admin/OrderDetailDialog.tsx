@@ -98,12 +98,15 @@ export function OrderDetailDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const download = async () => {
+  const download = async (): Promise<void> => {
     if (!order?.final_file_url) return;
     const { data, error } = await supabase.storage
       .from("order-final-files")
       .createSignedUrl(order.final_file_url, 300);
-    if (error || !data) return toast.error("Could not open the file.");
+    if (error || !data) {
+      toast.error("Could not open the file.");
+      return;
+    }
     window.open(data.signedUrl, "_blank", "noopener");
   };
 
