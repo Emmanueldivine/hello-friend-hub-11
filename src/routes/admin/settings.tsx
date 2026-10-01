@@ -82,10 +82,14 @@ function Settings() {
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isReset && !currentPassword) {
+      toast.error("Enter your old password.");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({
       password,
-      ...(currentPassword ? { current_password: currentPassword } : {}),
+      ...(!isReset && currentPassword ? { current_password: currentPassword } : {}),
     } as Parameters<typeof supabase.auth.updateUser>[0]);
     setBusy(false);
     if (error) {
@@ -95,6 +99,7 @@ function Settings() {
     setPassword("");
     setCurrentPassword("");
     toast.success("Password changed");
+    if (isReset) navigate({ to: "/admin/settings", search: {} as never, replace: true });
   };
 
 
