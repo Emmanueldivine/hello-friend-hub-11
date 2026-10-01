@@ -21,6 +21,7 @@ import { Route as AdminStudentsRouteImport } from './routes/admin/students'
 import { Route as AdminSubAdminsRouteImport } from './routes/admin/sub-admins'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
+import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
 import { Route as ApiPublicStudentSyncRouteImport } from './routes/api/public/student-sync'
 
@@ -84,6 +85,11 @@ const AdminWalletRoute = AdminWalletRouteImport.update({
   path: '/wallet',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin_/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrderStatusRoute = ApiPublicOrderStatusRouteImport.update({
   id: '/api/public/order-status',
   path: '/api/public/order-status',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/admin/sub-admins': typeof AdminSubAdminsRoute
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
+  '/admin_/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/vendors'
     | '/admin/wallet'
+    | '/admin/login'
     | '/admin/'
     | '/api/public/order-status'
     | '/api/public/student-sync'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/vendors'
     | '/admin/wallet'
+    | '/admin/login'
     | '/admin'
     | '/api/public/order-status'
     | '/api/public/student-sync'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/admin/sub-admins'
     | '/admin/vendors'
     | '/admin/wallet'
+    | '/admin_/login'
     | '/admin/'
     | '/api/public/order-status'
     | '/api/public/student-sync'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
+  AdminLoginRoute: typeof AdminLoginRoute
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
   ApiPublicStudentSyncRoute: typeof ApiPublicStudentSyncRoute
 }
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminWalletRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin_/login': {
+      id: '/admin_/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/order-status': {
       id: '/api/public/order-status'
       path: '/api/public/order-status'
@@ -334,6 +354,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
+  AdminLoginRoute: AdminLoginRoute,
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
   ApiPublicStudentSyncRoute: ApiPublicStudentSyncRoute,
 }
