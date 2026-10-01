@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminRealtime } from "@/hooks/useAdminRealtime";
 
 import { clearLegacyStorage } from "@/lib/clear-legacy-storage";
-import { claimSuperAdmin, superAdminExists } from "@/lib/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -70,172 +69,6 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function SetupSuperAdmin({ onDone }: { onDone: () => void }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password !== confirm) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-    setBusy(true);
-    try {
-      let { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin + "/admin" },
-      });
-      // Account may already exist from an earlier attempt — sign in instead.
-      if (error) {
-        const retry = await supabase.auth.signInWithPassword({ email, password });
-        if (retry.error) throw new Error(error.message);
-        data = retry.data as typeof data;
-      }
-      if (!data.session) {
-        const retry = await supabase.auth.signInWithPassword({ email, password });
-        if (retry.error) throw new Error(retry.error.message);
-      }
-      const claim = await claimSuperAdmin({
-        data: { fullName: email.split("@")[0] ?? "Super Admin", email },
-      });
-      if (claim.status === "exists") {
-        toast.error("A super admin already exists. Please sign in instead.");
-      } else {
-        toast.success("Super admin account created. You are signed in.");
-      }
-      onDone();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the account.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <Shell>
-      <Brand />
-      <h2 className="mb-1 text-base font-bold">Create Super Admin Account</h2>
-      <p className="mb-5 text-xs text-muted-foreground">
-        No admin exists yet. This one-time setup creates the owner account for Unieveryhelp.
-      </p>
-      <form className="space-y-4" onSubmit={submit}>
-        <div className="space-y-1.5">
-          <Label htmlFor="su-email">Email</Label>
-          <Input
-            id="su-email"
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="su-pass">Password</Label>
-          <Input
-            id="su-pass"
-            type="password"
-            minLength={8}
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="su-confirm">Confirm password</Label>
-          <Input
-            id="su-confirm"
-            type="password"
-            minLength={8}
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? "Creating…" : "Create super admin"}
-        </Button>
-      </form>
-    </Shell>
-  );
-}
-
-function AdminLogin({ onDone }: { onDone: () => void }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    onDone();
-  };
-
-  const reset = async () => {
-    if (!email) {
-      toast.error("Enter your email first, then click reset.");
-      return;
-    }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin + "/reset-password",
-    });
-    if (error) toast.error(error.message);
-    else toast.success("Password reset link sent to your email.");
-  };
-
-  return (
-    <Shell>
-      <Brand />
-      <form className="space-y-4" onSubmit={submit}>
-        <div className="space-y-1.5">
-          <Label htmlFor="admin-email">Email</Label>
-          <Input
-            id="admin-email"
-            type="email"
-            value={email}
-            autoComplete="username"
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="admin-password">Password</Label>
-          <Input
-            id="admin-password"
-            type="password"
-            value={password}
-            autoComplete="current-password"
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <Button type="submit" className="w-full" disabled={busy}>
-          {busy ? "Signing in…" : "Sign in"}
-        </Button>
-      </form>
-      <button
-        type="button"
-        onClick={reset}
-        className="mt-4 w-full text-xs text-muted-foreground underline underline-offset-4"
-      >
-        Forgot password?
-      </button>
-    </Shell>
-  );
-}
-
 function NoAccess() {
   return (
     <Shell>
@@ -264,15 +97,7 @@ function AdminShell() {
     clearLegacyStorage();
   }, []);
 
-  const setupState = useQuery({
-    queryKey: ["super-admin-exists"],
-    queryFn: async () => {
-      const res = await superAdminExists();
-      return Boolean(res.exists);
-    },
-  });
-
-  if (loading || setupState.isLoading) {
+  if (loading) {
     return (
       <main className="grid min-h-screen place-items-center bg-sidebar text-sidebar-foreground">
         <p className="text-sm">Loading admin…</p>
@@ -280,14 +105,7 @@ function AdminShell() {
     );
   }
 
-  const done = () => {
-    refetch();
-    setupState.refetch();
-  };
-
-  if (!session) {
-    return setupState.data === false ? <SetupSuperAdmin onDone={done} /> : <AdminLogin onDone={done} />;
-  }
+  if (!session) return <Navigate to="/admin/login" replace />;
   if (!session.isAdmin) return <NoAccess />;
 
 
