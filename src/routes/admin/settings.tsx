@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { PasswordInput } from "@/routes/admin_.login";
 
 export const Route = createFileRoute("/admin/settings")({
   component: () => (
@@ -21,6 +22,9 @@ export const Route = createFileRoute("/admin/settings")({
 
 function Settings() {
   const { session, refetch } = useAdminAuth();
+  const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { reset?: string };
+  const isReset = search.reset === "1";
   const [fullName, setFullName] = useState(session?.fullName ?? "");
   const [avatarUrl, setAvatarUrl] = useState(session?.avatarUrl ?? "");
   const [email, setEmail] = useState(session?.email ?? "");
@@ -161,28 +165,19 @@ function Settings() {
           </form>
 
           <h3 className="mb-4 text-sm font-bold">Change password</h3>
+          {isReset ? (
+            <p className="mb-3 text-xs font-semibold text-destructive">Please set a new password now.</p>
+          ) : null}
           <form className="space-y-4" onSubmit={changePassword}>
-            <div className="space-y-1.5">
-              <Label htmlFor="set-current">Current password</Label>
-              <Input
-                id="set-current"
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-              />
-            </div>
+            {!isReset ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="set-current">Old password</Label>
+                <PasswordInput id="set-current" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
+              </div>
+            ) : null}
             <div className="space-y-1.5">
               <Label htmlFor="set-pass">New password</Label>
-              <Input
-                id="set-pass"
-                type="password"
-                minLength={8}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+<PasswordInput id="set-pass" minLength={8} autoComplete="new-password" value={password} onChange={setPassword} />
             </div>
             <Button type="submit" disabled={busy}>
               Update password
