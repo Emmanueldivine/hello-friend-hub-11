@@ -22,37 +22,83 @@ async function assertSuperAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Only the super admin can manage sub-admins.");
 }
 
-export const superAdminExists = createServerFn({ method: "GET" }).handler(async () => {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("user_roles")
-    .select("id")
-    .eq("role", "super_admin")
-    .limit(1);
-  if (error) throw new Error(error.message);
-  return { exists: (data?.length ?? 0) > 0 };
-});
+const OWNER_EMAIL = "emmanueldivine042@gmail.com";
 
-export const claimSuperAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ fullName: z.string().min(1), email: z.string().email() }).parse(data))
-  .handler(async ({ data, context }) => {
+function publicAuthClient() {
+  return import("@supabase/supabase-js").then(({ createClient }) => {
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+    return createClient(process.env["SUPABASE_URL"]!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: {
+        fetch: (input, init) => {
+          const h = new Headers(init?.headers);
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          h.set("apikey", key);
+          return fetch(input, { ...init, headers: h });
+        },
+      },
+    });
+  });
+}
+
+/** Username + password login. The email stays on the server and is never sent to the browser. */
+export const adminUsernameLogin = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    z.object({ username: z.string().trim().min(1).max(100), password: z.string().min(1).max(200) }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    const fail = { ok: false as const, error: "Invalid username or password." };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: existing, error } = await supabaseAdmin
-      .from("user_roles")
-      .select("id")
-      .eq("role", "super_admin")
-      .limit(1);
-    if (error) throw new Error(error.message);
-    if ((existing?.length ?? 0) > 0) return { status: "exists" as const };
-
-    await supabaseAdmin.from("user_roles").insert({ user_id: context.userId, role: "super_admin" });
-    await supabaseAdmin
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .upsert({ id: context.userId, full_name: data.fullName, email: data.email });
-    return { status: "granted" as const };
+      .select("id, email")
+      .ilike("username", data.username.replace(/[%_]/g, "\\$&"))
+      .maybeSingle();
+    if (!profile?.email) return fail;
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", profile.id)
+      .in("role", ["admin", "super_admin"]);
+    const isOwner = profile.email.toLowerCase() === OWNER_EMAIL;
+    if (!isOwner && !(roles?.length)) return fail;
+
+    const client = await publicAuthClient();
+    const { data: auth, error } = await client.auth.signInWithPassword({
+      email: profile.email,
+      password: data.password,
+    });
+    if (error || !auth.session) return fail;
+
+    if (isOwner && !roles?.some((r) => r.role === "super_admin")) {
+      await supabaseAdmin.from("user_roles").upsert({ user_id: profile.id, role: "super_admin" }, { onConflict: "user_id,role" });
+    }
+    return {
+      ok: true as const,
+      access_token: auth.session.access_token,
+      refresh_token: auth.session.refresh_token,
+    };
   });
 
+/** Sends a 6-digit recovery code, only for admin accounts. Always returns ok to avoid leaking which emails exist. */
+export const sendAdminRecoveryCode = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ email: z.string().trim().email().max(255) }).parse(data))
+  .handler(async ({ data }) => {
+    const email = data.email.toLowerCase();
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: profile } = await supabaseAdmin.from("profiles").select("id").ilike("email", email).maybeSingle();
+    if (!profile) return { ok: true };
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", profile.id)
+      .in("role", ["admin", "super_admin"]);
+    if (!roles?.length) return { ok: true };
+    const client = await publicAuthClient();
+    const { error } = await client.auth.resetPasswordForEmail(email);
+    if (error) console.error("recovery code error", error.message);
+    return { ok: true };
+  });
 
 export const createSubAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
