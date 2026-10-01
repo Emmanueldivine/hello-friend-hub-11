@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { DataTable, Empty, Guard, PageHead, Pill, Stat, statusTone } from "@/components/admin/AdminUI";
+import { OrderDetailDialog, type AdminOrder } from "@/components/admin/OrderDetailDialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -29,13 +30,14 @@ function Orders() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<AdminOrder | null>(null);
 
   const { data = [] } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: async () => {
       const [{ data: orders }, { data: profiles }, { data: vendors }] = await Promise.all([
         supabase.from("orders").select("*").order("created_at", { ascending: false }),
-        supabase.from("profiles").select("id, full_name, email"),
+        supabase.from("profiles").select("id, full_name, email, school, phone"),
         supabase.from("vendors").select("id, business_name"),
       ]);
       return (orders ?? []).map((o) => ({
