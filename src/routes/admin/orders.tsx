@@ -113,14 +113,18 @@ function Orders() {
 
       <DataTable head={["Reference", "Order", "Student", "Vendor", "Amount", "Commission", "Status", "Date"]}>
         {rows.map((o) => (
-          <tr key={o.id} className="border-b last:border-0">
+          <tr
+            key={o.id}
+            className="cursor-pointer border-b last:border-0 hover:bg-muted/50"
+            onClick={() => setSelected(o as AdminOrder)}
+          >
             <td className="px-4 py-3 font-mono text-xs">{o.reference}</td>
             <td className="px-4 py-3 font-semibold">{o.title}</td>
             <td className="px-4 py-3">{o.student?.full_name ?? "—"}</td>
             <td className="px-4 py-3">{o.vendor?.business_name ?? "—"}</td>
             <td className="px-4 py-3">{naira(o.amount)}</td>
             <td className="px-4 py-3 text-muted-foreground">{naira(o.commission)}</td>
-            <td className="px-4 py-3">
+            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
               <Select
                 value={String(o.status)}
                 onValueChange={(status) => setStatus.mutate({ id: o.id, status })}
@@ -144,6 +148,8 @@ function Orders() {
         ))}
         {rows.length === 0 ? <Empty colSpan={8} label="No orders match this view" /> : null}
       </DataTable>
+
+      <OrderDetailDialog order={selected} onOpenChange={(open) => !open && setSelected(null)} />
 
       <p className="mt-3 text-xs text-muted-foreground">
         Status legend:{" "}
