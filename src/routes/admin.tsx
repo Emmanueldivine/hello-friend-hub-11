@@ -1,12 +1,8 @@
 import { createFileRoute, Link, Navigate, Outlet, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminRealtime } from "@/hooks/useAdminRealtime";
 
@@ -47,20 +43,6 @@ const NAV: NavItem[] = [
   { to: "/admin/settings", label: "Settings", area: "settings" },
 ];
 
-function Brand() {
-  return (
-    <div className="mb-6 flex items-center gap-3">
-      <span className="grid size-10 place-items-center rounded-xl bg-accent font-black text-accent-foreground">
-        UH
-      </span>
-      <div>
-        <h1 className="text-lg font-bold leading-tight">Unieveryhelp Admin</h1>
-        <p className="text-xs text-muted-foreground">Staff access only</p>
-      </div>
-    </div>
-  );
-}
-
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="flex min-h-screen items-center justify-center bg-sidebar px-4 py-10">
@@ -87,7 +69,7 @@ function NoAccess() {
 }
 
 function AdminShell() {
-  const { session, can, loading, refetch } = useAdminAuth();
+  const { session, can, loading } = useAdminAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [open, setOpen] = useState(false);
   useAdminRealtime();
