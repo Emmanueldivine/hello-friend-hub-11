@@ -93,6 +93,7 @@ function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
+  const [formError, setFormError] = useState("");
 
   useEffect(() => {
     clearLegacyStorage();
@@ -100,10 +101,12 @@ function AdminLoginPage() {
 
   const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     setBusy(true);
     try {
       const res = await login({ data: { username, password } });
       if (!res.ok) {
+        setFormError(res.error);
         toast.error(res.error);
         return;
       }
@@ -122,6 +125,7 @@ function AdminLoginPage() {
 
   const submitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     setBusy(true);
     try {
       await sendCode({ data: { email } });
@@ -136,6 +140,7 @@ function AdminLoginPage() {
 
   const submitCode = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError("");
     setBusy(true);
     const { error } = await supabase.auth.verifyOtp({
       email: email.trim().toLowerCase(),
@@ -144,6 +149,7 @@ function AdminLoginPage() {
     });
     setBusy(false);
     if (error) {
+      setFormError("Incorrect or expired code.");
       toast.error("Incorrect or expired code.");
       return;
     }
@@ -155,6 +161,11 @@ function AdminLoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-sidebar px-4 py-10">
       <Card className="w-full max-w-sm p-8">
         <Brand />
+        {formError ? (
+          <p role="alert" className="mb-4 rounded-md bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">
+            {formError}
+          </p>
+        ) : null}
         {step === "login" ? (
           <>
             <form className="space-y-4" onSubmit={submitLogin}>
@@ -183,7 +194,7 @@ function AdminLoginPage() {
             </form>
             <button
               type="button"
-              onClick={() => setStep("email")}
+              onClick={() => { setFormError(""); setStep("email"); }}
               className="mt-4 w-full text-xs text-muted-foreground underline underline-offset-4"
             >
               Forgot Password?
@@ -205,7 +216,7 @@ function AdminLoginPage() {
             </Button>
             <button
               type="button"
-              onClick={() => setStep("login")}
+              onClick={() => { setFormError(""); setStep("login"); }}
               className="w-full text-xs text-muted-foreground underline underline-offset-4"
             >
               Back to sign in
@@ -229,7 +240,7 @@ function AdminLoginPage() {
             </Button>
             <button
               type="button"
-              onClick={() => setStep("email")}
+              onClick={() => { setFormError(""); setStep("email"); }}
               className="w-full text-xs text-muted-foreground underline underline-offset-4"
             >
               Resend code
