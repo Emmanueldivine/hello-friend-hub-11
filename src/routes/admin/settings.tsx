@@ -30,6 +30,9 @@ function Settings() {
   const [email, setEmail] = useState(session?.email ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetUsername, setResetUsername] = useState("");
+  const verifyUsername = useServerFn(verifyMyUsername);
   const [busy, setBusy] = useState(false);
 
 
@@ -86,22 +89,39 @@ function Settings() {
 
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("New passwords do not match.");
+      return;
+    }
     if (!isReset && !currentPassword) {
       toast.error("Enter your old password.");
       return;
     }
     setBusy(true);
+    if (isReset) {
+      const check = await verifyUsername({ data: { username: resetUsername } }).catch(() => ({ ok: false }));
+      if (!check.ok) {
+        setBusy(false);
+        toast.error("Incorrect username.");
+        return;
+      }
+    }
     const { error } = await supabase.auth.updateUser({
       password,
       ...(!isReset && currentPassword ? { current_password: currentPassword } : {}),
     } as Parameters<typeof supabase.auth.updateUser>[0]);
     setBusy(false);
     if (error) {
-      toast.error(error.message);
+      const msg = error.message.toLowerCase();
+      if (msg.includes("current") || msg.includes("invalid")) toast.error("Incorrect old password.");
+      else if (msg.includes("different") || msg.includes("same")) toast.error("New password must be different from the old one.");
+      else toast.error(error.message);
       return;
     }
     setPassword("");
+    setConfirmPassword("");
     setCurrentPassword("");
+    setResetUsername("");
     toast.success("Password changed");
     if (isReset) navigate({ to: "/admin/settings", search: {} as never, replace: true });
   };
@@ -169,15 +189,24 @@ function Settings() {
             <p className="mb-3 text-xs font-semibold text-destructive">Please set a new password now.</p>
           ) : null}
           <form className="space-y-4" onSubmit={changePassword}>
-            {!isReset ? (
+            {isReset ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="set-username">Username</Label>
+                <Input id="set-username" value={resetUsername} onChange={(e) => setResetUsername(e.target.value)} autoComplete="username" required />
+              </div>
+            ) : (
               <div className="space-y-1.5">
                 <Label htmlFor="set-current">Old password</Label>
                 <PasswordInput id="set-current" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
               </div>
-            ) : null}
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="set-pass">New password</Label>
-<PasswordInput id="set-pass" minLength={8} autoComplete="new-password" value={password} onChange={setPassword} />
+              <PasswordInput id="set-pass" minLength={8} autoComplete="new-password" value={password} onChange={setPassword} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="set-confirm">Confirm new password</Label>
+              <PasswordInput id="set-confirm" minLength={8} autoComplete="new-password" value={confirmPassword} onChange={setConfirmPassword} />
             </div>
             <Button type="submit" disabled={busy}>
               Update password
