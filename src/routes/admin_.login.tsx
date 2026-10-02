@@ -144,7 +144,7 @@ function AdminLoginPage() {
     });
     setBusy(false);
     if (error) {
-      toast.error("Invalid or expired code.");
+      toast.error("Incorrect or expired code.");
       return;
     }
     toast.success("Verified. Please set a new password.");

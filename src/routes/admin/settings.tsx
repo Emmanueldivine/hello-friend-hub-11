@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { PasswordInput } from "@/routes/admin_.login";
+import { useServerFn } from "@tanstack/react-start";
+import { verifyMyUsername } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin/settings")({
   component: () => (
