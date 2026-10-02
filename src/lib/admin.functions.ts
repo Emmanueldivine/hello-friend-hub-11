@@ -22,6 +22,23 @@ async function assertSuperAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Only the super admin can manage sub-admins.");
 }
 
+function normalizeUsername(v: string) {
+  return v.replace(/\s+/g, "").toLowerCase();
+}
+
+/** Used in the reset-password flow: confirms the signed-in (recovery) account owns this username. */
+export const verifyMyUsername = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ username: z.string().trim().min(1).max(100) }).parse(data))
+  .handler(async ({ data, context }) => {
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", context.userId)
+      .maybeSingle();
+    return { ok: !!profile?.username && normalizeUsername(profile.username) === normalizeUsername(data.username) };
+  });
+
 const OWNER_EMAIL = "emmanueldivine042@gmail.com";
 
 function publicAuthClient() {
@@ -47,13 +64,13 @@ export const adminUsernameLogin = createServerFn({ method: "POST" })
     z.object({ username: z.string().trim().min(1).max(100), password: z.string().min(1).max(200) }).parse(data),
   )
   .handler(async ({ data }) => {
-    const fail = { ok: false as const, error: "Invalid username or password." };
+    const fail = { ok: false as const, error: "Incorrect username or password." };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: profile } = await supabaseAdmin
+    const { data: candidates } = await supabaseAdmin
       .from("profiles")
-      .select("id, email")
-      .ilike("username", data.username.replace(/[%_]/g, "\\$&"))
-      .maybeSingle();
+      .select("id, email, username")
+      .not("username", "is", null);
+    const profile = (candidates ?? []).find((p) => normalizeUsername(p.username ?? "") === normalizeUsername(data.username));
     if (!profile?.email) return fail;
     const { data: roles } = await supabaseAdmin
       .from("user_roles")
