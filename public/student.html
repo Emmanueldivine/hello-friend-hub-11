@@ -810,7 +810,6 @@ const f=new FormData(e.target),title=String(f.get('title')).trim(),course=String
 if(!title||!course||!desc) return toast('Fill all fields');
 const profile=user()||read('unieveryhelp_user',null)||{};
 const supabaseForm=new FormData();supabaseForm.append('title',desc);supabaseForm.append('course',String(f.get('title')).trim());supabaseForm.append('uploaded_by',String(profile.username||profile.id||profile.email||profile.phone||''));supabaseForm.append('student_email',String(profile.email||''));const uploadInput=$('#file-upload');if(uploadInput?.files?.[0])supabaseForm.append('file',uploadInput.files[0]);
-try{const response=await fetch('/api/assignments',{method:'POST',body:supabaseForm});if(!response.ok){const result=await response.json().catch(()=>({}));return toast(result.error||'Unable to save assignment');}}catch(error){return toast('Unable to connect to assignment storage');}
 const base={id:'a-'+Date.now(),title,courseCode:course.toUpperCase(),description:desc,track,pages,file:selectedFile,createdAt:new Date().toISOString()};
 if(track==='project'){
 write('assignments',[{...base,deadline:null,price:null,status:'Received'},...items()]);
