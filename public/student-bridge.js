@@ -61,8 +61,10 @@
         name: u.fullName || u.name || u.username || "",
         email: (u.email || "").trim(),
         phone: String(u.phone || u.phoneNumber || ""),
-        school: u.school || u.university || "",
+        school: u.school || u.schoolName || u.university || "",
+        username: String(u.username || ""),
       },
+      wallet: Number(read("unieveryhelp_wallet") ?? read("wallet_" + (u.phone || u.phoneNumber || "guest")) ?? u.wallet ?? 0) || 0,
       assignments: (Array.isArray(assignments) ? assignments : []).slice(0, 200).map(function (a) {
         return {
           id: String(a.id || ""),
@@ -97,20 +99,69 @@
     return isNaN(d.getTime()) ? "" : d.toISOString();
   }
 
-  function accessToken() {
-    for (var i = 0; i < localStorage.length; i++) {
-      var key = localStorage.key(i);
-      if (!key || key.indexOf("sb-") !== 0 || key.indexOf("-auth-token") === -1) continue;
-      var session = read(key);
-      if (session && typeof session.access_token === "string") return session.access_token;
+  /* The student portal signs students in locally. Give every student a
+     matching real backend account (same password) so their data can sync. */
+  var SB_URL = "https://c--384acc4d-de47-4ef6-b3e4-ec211c60dcd9-prod.lovable.cloud";
+  var SB_KEY = "sb_publishable_mQAHsVmD257MjgcIPLLMFQ_ettdc7eN";
+  var SESSION_KEY = "uh_student_session";
+  var PENDING = null;
+
+  function studentEmail(u) {
+    var handle = String(u.username || u.phone || u.phoneNumber || "").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    return handle ? handle + "@students.unieveryhelp.com" : "";
+  }
+
+  function authCall(path, body) {
+    return fetch(SB_URL + "/auth/v1/" + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: SB_KEY },
+      body: JSON.stringify(body),
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); });
+  }
+
+  function ensureSession() {
+    var u = currentUser();
+    if (!u) return Promise.resolve("");
+    var email = studentEmail(u);
+    var s = read(SESSION_KEY);
+    if (s && s.email === email && s.access_token && s.expires_at * 1000 > Date.now() + 60000) {
+      return Promise.resolve(s.access_token);
     }
-    return "";
+    if (PENDING) return PENDING;
+    var password = u.password;
+    if (!password) {
+      var match = (read("users") || []).filter(function (x) {
+        return x && (x.username === u.username || x.phone === u.phone);
+      })[0];
+      password = match && match.password;
+    }
+    if (!email || !password) return Promise.resolve("");
+    var save = function (res) {
+      if (!res.ok || !res.body.access_token) return "";
+      setItem(SESSION_KEY, JSON.stringify({
+        email: email,
+        access_token: res.body.access_token,
+        expires_at: Math.floor(Date.now() / 1000) + (res.body.expires_in || 3600),
+      }));
+      return res.body.access_token;
+    };
+    PENDING = authCall("token?grant_type=password", { email: email, password: password })
+      .then(function (res) {
+        if (res.ok) return save(res);
+        return authCall("signup", { email: email, password: password }).then(function (sr) {
+          if (sr.ok && sr.body.access_token) return save(sr);
+          return authCall("token?grant_type=password", { email: email, password: password }).then(save);
+        });
+      })
+      .catch(function () { return ""; })
+      .then(function (t) { PENDING = null; return t; });
+    return PENDING;
   }
 
   function sync() {
     var payload = collect();
     if (!payload) return;
-    var token = accessToken();
+    ensureSession().then(function (token) {
     if (!token) return;
     var signature = JSON.stringify(payload);
     if (signature === LAST) return;
@@ -125,13 +176,14 @@
     }).catch(function () {
       LAST = "";
     });
+    });
   }
 
   /* Pull delivery updates made by admins/sub-admins so the progress bar
      flips to 100% completed with a download link, without touching the
      progress bar logic itself. */
   function pull() {
-    var token = accessToken();
+    ensureSession().then(function (token) {
     if (!token) return;
     var u = currentUser();
     var id = uid(u);
@@ -163,6 +215,7 @@
         window.dispatchEvent(new Event("hashchange"));
       })
       .catch(function () {});
+    });
   }
 
   function schedule() {
