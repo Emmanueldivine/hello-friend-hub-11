@@ -16,7 +16,9 @@ const payloadSchema = z.object({
     email: z.string().max(160).optional(),
     phone: z.string().max(60).optional(),
     school: z.string().max(160).optional(),
+    username: z.string().max(60).optional(),
   }),
+  wallet: z.number().min(0).max(100_000_000).optional(),
   assignments: z
     .array(
       z.object({
@@ -106,6 +108,30 @@ export const Route = createFileRoute("/api/public/student-sync")({
           .from("profiles")
           .upsert(profileFields, { onConflict: "id" });
         if (profileError) return new Response("Sync failed", { status: 500 });
+
+        // 1b. Wallet (demo payments): mirror the balance and log top-ups.
+        if (typeof data.wallet === "number") {
+          const { data: wallet } = await supabaseAdmin
+            .from("wallets")
+            .select("id, balance")
+            .eq("user_id", studentId)
+            .maybeSingle();
+          const previous = Number(wallet?.balance ?? 0);
+          if (!wallet) {
+            await supabaseAdmin.from("wallets").insert({ user_id: studentId, balance: data.wallet });
+          } else if (previous !== data.wallet) {
+            await supabaseAdmin.from("wallets").update({ balance: data.wallet }).eq("id", wallet.id);
+          }
+          const topUp = data.wallet - (wallet ? previous : 0);
+          if (topUp > 0) {
+            await supabaseAdmin.from("transactions").insert({
+              user_id: studentId,
+              amount: topUp,
+              type: "topup",
+              status: "success",
+            });
+          }
+        }
 
         // 2. Orders from student assignments
         for (const a of data.assignments ?? []) {
