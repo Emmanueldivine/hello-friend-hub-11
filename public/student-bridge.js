@@ -63,6 +63,10 @@
         phone: String(u.phone || u.phoneNumber || ""),
         school: u.school || u.schoolName || u.university || "",
         username: String(u.username || ""),
+        department: String(u.department || ""),
+        level: String(u.level || ""),
+        matricNumber: String(u.matricNumber || ""),
+        profileCompleted: !!u.profileCompleted,
       },
       wallet: Number(read("unieveryhelp_wallet") ?? read("wallet_" + (u.phone || u.phoneNumber || "guest")) ?? u.wallet ?? 0) || 0,
       assignments: (Array.isArray(assignments) ? assignments : []).slice(0, 200).map(function (a) {
@@ -119,8 +123,8 @@
     }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); });
   }
 
-  function ensureSession() {
-    var u = currentUser();
+  function ensureSession(given) {
+    var u = given || currentUser();
     if (!u) return Promise.resolve("");
     var email = studentEmail(u);
     var s = read(SESSION_KEY);
@@ -192,6 +196,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (res) {
         if (!res || !Array.isArray(res.orders)) return;
+        restoreProfile(res.profile);
         var key = localStorage.getItem("assignments_" + id) !== null
           ? "assignments_" + id
           : "assignments";
@@ -217,6 +222,48 @@
       .catch(function () {});
     });
   }
+
+  /* Academic profile is saved on the server after the first time, so a
+     re-login never asks for it again. */
+  function restoreProfile(p) {
+    if (!p || !p.profile_completed) return;
+    var cur = currentUser();
+    if (!cur || cur.profileCompleted) return;
+    var extra = {
+      school: p.school || cur.school, schoolName: p.school || cur.schoolName,
+      department: p.department || cur.department, level: p.level || cur.level,
+      matricNumber: p.matric_number || cur.matricNumber || "", profileCompleted: true,
+    };
+    var updated = Object.assign({}, cur, extra);
+    setItem("currentUser", JSON.stringify(updated));
+    if (read("unieveryhelp_user")) setItem("unieveryhelp_user", JSON.stringify(updated));
+    var all = read("users");
+    if (Array.isArray(all)) {
+      all.forEach(function (x, i) {
+        if (x && (x.username === cur.username || x.phone === cur.phone)) all[i] = Object.assign({}, x, extra);
+      });
+      setItem("users", JSON.stringify(all));
+    }
+    window.dispatchEvent(new Event("hashchange"));
+  }
+
+  /* Called right after sign-up so the student appears in Admin immediately. */
+  window.UHBridge = {
+    register: function (newUser) {
+      ensureSession(newUser).then(function (token) {
+        if (!token) return;
+        fetch("/api/public/student-sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ user: {
+            name: newUser.fullName || newUser.username || "",
+            phone: String(newUser.phone || ""),
+            username: String(newUser.username || ""),
+          } }),
+        }).catch(function () {});
+      });
+    },
+  };
 
   function schedule() {
     clearTimeout(TIMER);

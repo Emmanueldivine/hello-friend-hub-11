@@ -33,6 +33,12 @@ export const Route = createFileRoute("/api/public/order-status")({
           .eq("student_id", authData.user.id);
         if (error) return new Response("Lookup failed", { status: 500 });
 
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("school, department, level, matric_number, profile_completed")
+          .eq("id", authData.user.id)
+          .maybeSingle();
+
         const results = [];
         for (const o of orders ?? []) {
           let downloadUrl: string | null = null;
@@ -53,7 +59,7 @@ export const Route = createFileRoute("/api/public/order-status")({
         }
 
         return Response.json(
-          { orders: results },
+          { orders: results, profile },
           { headers: { "cache-control": "no-store" } },
         );
       },

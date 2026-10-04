@@ -376,7 +376,7 @@ const all=users();
 if(all.some(x=>String(x.username||'').toLowerCase()===username)) return err('That username is already taken');
 if(all.some(x=>x.phone===phone)) return err('That phone number already has an account');
 busy=true; btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Creating account...';
-setTimeout(()=>{const newUser={fullName,username,phone,password,role:'student'};write('users',[...all,newUser]);localStorage.removeItem('currentUser');localStorage.removeItem('isLoggedIn');localStorage.removeItem('unieveryhelp_user');localStorage.removeItem('assignments');localStorage.removeItem('messages');localStorage.removeItem('chats');localStorage.removeItem('history');const notice=document.getElementById('auth-error');if(notice)notice.innerHTML='<p class="mt-4 rounded bg-emerald-50 p-3 text-xs text-emerald-700">Account created successfully, please login</p>';setTimeout(()=>auth(false),900);},1500);
+setTimeout(()=>{const newUser={fullName,username,phone,password,role:'student'};write('users',[...all,newUser]);try{window.UHBridge&&window.UHBridge.register(newUser);}catch(e){}localStorage.removeItem('currentUser');localStorage.removeItem('isLoggedIn');localStorage.removeItem('unieveryhelp_user');localStorage.removeItem('assignments');localStorage.removeItem('messages');localStorage.removeItem('chats');localStorage.removeItem('history');const notice=document.getElementById('auth-error');if(notice)notice.innerHTML='<p class="mt-4 rounded bg-emerald-50 p-3 text-xs text-emerald-700">Account created successfully, please login</p>';setTimeout(()=>auth(false),900);},1500);
 }else{
 const idRaw=$('#loginIdentifier').value.trim();
 if(!idRaw) return err('Enter your username or phone number');

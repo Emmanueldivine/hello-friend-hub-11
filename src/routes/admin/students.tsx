@@ -59,7 +59,7 @@ function Students() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
-      <DataTable head={["Name", "Email", "School", "Roles", "Status", "Joined", "Action"]}>
+      <DataTable head={["Name", "Email", "School", "Roles", "Status", "Last seen", "Joined", "Action"]}>
         {rows.map((u) => (
           <tr key={u.id} className="border-b last:border-0">
             <td className="px-4 py-3 font-semibold">{u.full_name}</td>
@@ -68,6 +68,9 @@ function Students() {
             <td className="px-4 py-3">{u.roles.join(", ") || "student"}</td>
             <td className="px-4 py-3">
               <Pill tone={u.banned ? "bad" : "good"}>{u.banned ? "Banned" : "Active"}</Pill>
+            </td>
+            <td className="px-4 py-3 text-muted-foreground">
+              {u.last_seen_at ? new Date(u.last_seen_at as string).toLocaleString() : "—"}
             </td>
             <td className="px-4 py-3 text-muted-foreground">
               {new Date(u.created_at as string).toLocaleDateString()}
@@ -83,7 +86,7 @@ function Students() {
             </td>
           </tr>
         ))}
-        {rows.length === 0 ? <Empty colSpan={7} label="No users found" /> : null}
+        {rows.length === 0 ? <Empty colSpan={8} label="No users found" /> : null}
       </DataTable>
     </>
   );

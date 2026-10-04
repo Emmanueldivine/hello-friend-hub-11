@@ -245,11 +245,15 @@ export type Database = {
           avatar_url: string | null
           banned: boolean
           created_at: string
+          department: string | null
           email: string | null
           full_name: string
           id: string
           last_seen_at: string
+          level: string | null
+          matric_number: string | null
           phone: string | null
+          profile_completed: boolean
           school: string | null
           username: string | null
         }
@@ -257,11 +261,15 @@ export type Database = {
           avatar_url?: string | null
           banned?: boolean
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string
           id?: string
           last_seen_at?: string
+          level?: string | null
+          matric_number?: string | null
           phone?: string | null
+          profile_completed?: boolean
           school?: string | null
           username?: string | null
         }
@@ -269,11 +277,15 @@ export type Database = {
           avatar_url?: string | null
           banned?: boolean
           created_at?: string
+          department?: string | null
           email?: string | null
           full_name?: string
           id?: string
           last_seen_at?: string
+          level?: string | null
+          matric_number?: string | null
           phone?: string | null
+          profile_completed?: boolean
           school?: string | null
           username?: string | null
         }
