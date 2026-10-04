@@ -17,6 +17,10 @@ const payloadSchema = z.object({
     phone: z.string().max(60).optional(),
     school: z.string().max(160).optional(),
     username: z.string().max(60).optional(),
+    department: z.string().max(160).optional(),
+    level: z.string().max(40).optional(),
+    matricNumber: z.string().max(60).optional(),
+    profileCompleted: z.boolean().optional(),
   }),
   wallet: z.number().min(0).max(100_000_000).optional(),
   assignments: z
@@ -101,7 +105,11 @@ export const Route = createFileRoute("/api/public/student-sync")({
           full_name: data.user.name?.trim() || email,
           email,
           phone: phone || null,
-          school: data.user.school || null,
+          ...(data.user.school ? { school: data.user.school } : {}),
+          ...(data.user.department ? { department: data.user.department } : {}),
+          ...(data.user.level ? { level: data.user.level } : {}),
+          ...(data.user.matricNumber ? { matric_number: data.user.matricNumber } : {}),
+          ...(data.user.profileCompleted ? { profile_completed: true } : {}),
           last_seen_at: new Date().toISOString(),
         };
         const { error: profileError } = await supabaseAdmin
