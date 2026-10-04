@@ -359,7 +359,10 @@ $('#username')?.addEventListener('input',e=>e.target.value=e.target.value.toLowe
 $('#toggle-password').onclick=()=>{const p=$('#password');p.type=p.type==='password'?'text':'password';$('#toggle-password').textContent=p.type==='password'?'Show':'Hide'};
 const err=t=>$('#auth-error').innerHTML=`<p class="mt-4 rounded bg-red-50 p-3 text-xs text-red-700">${t}</p>`;
 let busy=false;
-$('#auth-form').onsubmit=e=>{
+const uhApi=b=>fetch('/api/public/student-account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(r=>r.json()).catch(()=>({error:'network'}));
+const takenMsg=(sug)=>'This username is taken, please choose another.'+(sug&&sug.length?' Available: '+sug.map(x=>`<button type="button" class="uh-sug ml-1 rounded bg-white px-2 py-0.5 font-bold text-[#0a1931] underline">${x}</button>`).join(''):'');
+const wireSug=()=>document.querySelectorAll('.uh-sug').forEach(b=>b.onclick=()=>{$('#username').value=b.textContent;$('#auth-error').innerHTML='';});
+$('#auth-form').onsubmit=async e=>{
 e.preventDefault();
 if(busy) return;
 const btn=$('#auth-submit');
@@ -373,23 +376,25 @@ if(!/^0\d{10}$/.test(phone)) return err('Use 11-digit number starting with 0');
 if(!/^[a-z0-9_]{3,12}$/.test(username)) return err('Username must be 3-12 chars: letters, numbers or _ only');
 if(password.length<6) return err('Password min 6 chars');
 const all=users();
-if(all.some(x=>String(x.username||'').toLowerCase()===username)) return err('That username is already taken');
+if(all.some(x=>String(x.username||'').toLowerCase()===username)){const c=await uhApi({action:'check',username});err(takenMsg(c.suggestions));return wireSug();}
 if(all.some(x=>x.phone===phone)) return err('That phone number already has an account');
 busy=true; btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Creating account...';
-setTimeout(()=>{const newUser={fullName,username,phone,password,role:'student'};write('users',[...all,newUser]);try{window.UHBridge&&window.UHBridge.register(newUser);}catch(e){}localStorage.removeItem('currentUser');localStorage.removeItem('isLoggedIn');localStorage.removeItem('unieveryhelp_user');localStorage.removeItem('assignments');localStorage.removeItem('messages');localStorage.removeItem('chats');localStorage.removeItem('history');const notice=document.getElementById('auth-error');if(notice)notice.innerHTML='<p class="mt-4 rounded bg-emerald-50 p-3 text-xs text-emerald-700">Account created successfully, please login</p>';setTimeout(()=>auth(false),900);},1500);
+const reg=await uhApi({action:'signup',fullName,username,phone,password});
+if(!reg.ok){busy=false;btn.disabled=false;btn.innerHTML='Create Account →';if(reg.error==='username_taken'){err(takenMsg(reg.suggestions));return wireSug();}if(reg.error==='phone_taken')return err('That phone number already has an account. Please login instead.');return err('Could not create your account. Please check your connection and try again.');}
+setTimeout(()=>{const newUser={fullName,username,phone,password,role:'student'};write('users',[...all,newUser]);localStorage.removeItem('currentUser');localStorage.removeItem('isLoggedIn');localStorage.removeItem('unieveryhelp_user');localStorage.removeItem('assignments');localStorage.removeItem('messages');localStorage.removeItem('chats');localStorage.removeItem('history');const notice=document.getElementById('auth-error');if(notice)notice.innerHTML='<p class="mt-4 rounded bg-emerald-50 p-3 text-xs text-emerald-700">Account created successfully, please login</p>';setTimeout(()=>auth(false),900);},1500);
 }else{
 const idRaw=$('#loginIdentifier').value.trim();
 if(!idRaw) return err('Enter your username or phone number');
 if(!password) return err('Enter your password');
 const isPhone=/^\d+$/.test(idRaw)||/^0/.test(idRaw);
 const idLc=idRaw.toLowerCase();
-const found=users().find(x=>{
+let found=users().find(x=>{
 const byPhone=x.phone===idRaw;
 const byUser=String(x.username||'').toLowerCase()===idLc;
 return (isPhone?(byPhone||byUser):(byUser||byPhone))&&x.password===password;
 });
-if(!found) return err('Wrong username/phone or password - User not found');
 busy=true; btn.disabled=true; btn.innerHTML='<span class="spinner"></span>Signing in...';
+if(!found){const r=await uhApi({action:'login',identifier:idRaw,password});if(r.ok&&r.user){found={...r.user,password};const rest=users().filter(x=>String(x.username||'').toLowerCase()!==String(found.username).toLowerCase()&&x.phone!==found.phone);write('users',[...rest,found]);}else{busy=false;btn.disabled=false;btn.innerHTML='Login →';if(r.error==='wrong_password')return err('Incorrect password. Please try again.');if(r.error==='not_found'){const local=users().some(x=>x.phone===idRaw||String(x.username||'').toLowerCase()===idLc);return err(local?'Incorrect password. Please try again.':'This account does not exist. <a href="#/create-account" class="font-bold underline">Create a new account</a> to get started.');}return err('Could not sign in. Please check your connection and try again.');}}
 setTimeout(async()=>{if(!found.role)found.role='student';if(!found.username)found.username=genUsername(found);write('currentUser',found);write('isLoggedIn',true);write('lastActivity',Date.now());await fetch('/api/demo-session',{method:'GET'});go('/dashboard');},1500);
 }
 };

@@ -105,6 +105,7 @@ export const Route = createFileRoute("/api/public/student-sync")({
           full_name: data.user.name?.trim() || email,
           email,
           phone: phone || null,
+          ...(data.user.username ? { username: data.user.username.toLowerCase() } : {}),
           ...(data.user.school ? { school: data.user.school } : {}),
           ...(data.user.department ? { department: data.user.department } : {}),
           ...(data.user.level ? { level: data.user.level } : {}),
