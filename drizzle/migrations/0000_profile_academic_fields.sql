@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS department text, ADD COLUMN IF NOT EXISTS level text, ADD COLUMN IF NOT EXISTS matric_number text, ADD COLUMN IF NOT EXISTS profile_completed boolean NOT NULL DEFAULT false;
