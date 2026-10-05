@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable, Empty, Guard, PageHead, Pill } from "@/components/admin/AdminUI";
 import { supabase } from "@/integrations/supabase/client";
+import { UserDetailDialog } from "@/components/admin/UserDetailDialog";
 
 export const Route = createFileRoute("/admin/students")({
   component: () => (
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/admin/students")({
 function Students() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { data = [] } = useQuery({
     queryKey: ["admin-users"],
@@ -61,7 +63,7 @@ function Students() {
       />
       <DataTable head={["Name", "Email", "School", "Roles", "Status", "Last seen", "Joined", "Action"]}>
         {rows.map((u) => (
-          <tr key={u.id} className="border-b last:border-0">
+          <tr key={u.id} className="cursor-pointer border-b last:border-0 hover:bg-muted/50" onClick={() => setOpenId(u.id)}>
             <td className="px-4 py-3 font-semibold">{u.full_name}</td>
             <td className="px-4 py-3">{u.email}</td>
             <td className="px-4 py-3">{u.school ?? "—"}</td>
@@ -79,7 +81,7 @@ function Students() {
               <Button
                 size="sm"
                 variant={u.banned ? "outline" : "destructive"}
-                onClick={() => toggleBan.mutate({ id: u.id, banned: !u.banned })}
+                onClick={(e) => { e.stopPropagation(); toggleBan.mutate({ id: u.id, banned: !u.banned }); }}
               >
                 {u.banned ? "Unban" : "Ban"}
               </Button>
@@ -88,6 +90,7 @@ function Students() {
         ))}
         {rows.length === 0 ? <Empty colSpan={8} label="No users found" /> : null}
       </DataTable>
+      <UserDetailDialog userId={openId} onClose={() => setOpenId(null)} />
     </>
   );
 }
