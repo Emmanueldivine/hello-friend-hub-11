@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { Card } from "@/components/ui/card";
@@ -57,12 +57,12 @@ function Dashboard() {
     <>
       <PageHead title="Overview" subtitle="Live marketplace activity across Unieveryhelp" />
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
-        <Stat label="Users" value={data.profiles.length} />
-        <Stat label="Vendors" value={data.vendors.length} hint={`${data.vendors.filter((v) => v.status === "approved").length} approved`} />
-        <Stat label="Assignments" value={data.assignments.length} />
-        <Stat label="Orders" value={data.orders.length} />
-        <Stat label="Volume" value={naira(revenue)} />
-        <Stat label="Commission" value={naira(commission)} hint={`${disputes} open disputes`} />
+        <Link to="/admin/students" className="block transition hover:opacity-80"><Stat label="Users" value={data.profiles.length} hint="View all users" /></Link>
+        <Link to="/admin/vendors" className="block transition hover:opacity-80"><Stat label="Vendors" value={data.vendors.length} hint={`${data.vendors.filter((v) => v.status === "approved").length} approved`} /></Link>
+        <Link to="/admin/orders" className="block transition hover:opacity-80"><Stat label="Assignments" value={data.orders.length} hint="Submitted by students" /></Link>
+        <Link to="/admin/orders" className="block transition hover:opacity-80"><Stat label="Orders" value={data.orders.length} hint={`${data.orders.filter((o) => o.status !== "completed").length} not completed`} /></Link>
+        <Link to="/admin/wallet" className="block transition hover:opacity-80"><Stat label="Volume" value={naira(revenue)} hint="View revenue" /></Link>
+        <Link to="/admin/wallet" className="block transition hover:opacity-80"><Stat label="Commission" value={naira(commission)} hint={`${disputes} open disputes`} /></Link>
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-[1.3fr_1fr]">
