@@ -552,6 +552,7 @@ const trackLabel=t=>t==='cheap'?'Cheap Text Work':t==='technical'?'Technical Wor
 /* ================= TRUSTWORTHY PROGRESS PHASES ================= */
 const deadlineDate=a=>(a.deadline&&a.createdAt)?new Date(new Date(a.createdAt).getTime()+Number(a.deadline)*3600*1000):null;
 const fmtDate=d=>d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'To be scheduled';
+const shortId=a=>{const s=String(a?.id||'');return s.length>8?'UH-'+s.replace(/^UH/i,'').slice(-6):s;};
 /* returns {phase:0|1|2|3|4, percent} */
 function phaseOf(a){
 const s=(a.status||'').toLowerCase();
@@ -671,6 +672,7 @@ const a=items().find(x=>x.id===id);
 if(!a) return list();
 const ph=phaseOf(a);
 shell(`<div class="text-[14px] text-[#64748b]">${esc(a.courseCode)} · ${ranges[(a.pages||1)-1]} pages · ${a.deadline?a.deadline+'h · ':''}${esc(trackLabel(a.track))}</div>
+<div class="mt-1 text-[12px] font-semibold tracking-wide text-[#94a3b8]">Order ${esc(shortId(a))}</div>
 <div class="mt-6 rounded-2xl border-[1.5px] border-[#e2e8f0] bg-white p-6">
 <div class="text-[13px] font-semibold text-[#0a1931]">Description</div>
 <p class="mt-2 whitespace-pre-line text-[14px] leading-6 text-[#64748b]">${esc(a.description)}</p>
