@@ -8,6 +8,13 @@
       "when": 1791149982596,
       "tag": "0000_profile_academic_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791275216038,
+      "tag": "0001_student_real_email_and_reset_codes",
+      "breakpoints": true
     }
   ]
 }

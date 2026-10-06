@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 const DOMAIN = "students.unieveryhelp.com";
 const emailFor = (username: string) => `${username.toLowerCase()}@${DOMAIN}`;
 
+const emailSchema = z.string().trim().toLowerCase().email().max(120);
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("check"), username: z.string().max(40), phone: z.string().max(20).optional() }),
   z.object({
@@ -15,10 +16,43 @@ const bodySchema = z.discriminatedUnion("action", [
     fullName: z.string().min(3).max(80),
     username: z.string().regex(/^[a-z0-9_]{3,12}$/),
     phone: z.string().regex(/^0\d{10}$/),
+    email: emailSchema,
     password: z.string().min(6).max(72),
   }),
   z.object({ action: z.literal("login"), identifier: z.string().min(1).max(40), password: z.string().min(1).max(72) }),
+  z.object({ action: z.literal("forgot_start"), username: z.string().min(1).max(40), phone: z.string().max(20), email: emailSchema }),
+  z.object({ action: z.literal("forgot_verify"), username: z.string().min(1).max(40), code: z.string().regex(/^\d{6}$/) }),
+  z.object({
+    action: z.literal("forgot_reset"),
+    username: z.string().min(1).max(40),
+    code: z.string().regex(/^\d{6}$/),
+    password: z.string().min(6).max(72),
+  }),
 ]);
+
+async function sha(s: string) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function findForReset(admin: Admin, username: string) {
+  const { data } = await admin.from("profiles").select("id, username, phone, real_email").ilike("username", username.trim().toLowerCase()).limit(1);
+  return data?.[0] ?? null;
+}
+
+/** Returns the live code row if the code is right; counts wrong tries (max 5). */
+async function checkCode(admin: Admin, userId: string, code: string) {
+  const { data } = await admin
+    .from("password_reset_codes").select("*").eq("user_id", userId)
+    .order("created_at", { ascending: false }).limit(1);
+  const row = data?.[0];
+  if (!row || new Date(row.expires_at).getTime() < Date.now() || row.attempts >= 5) return null;
+  if (row.code_hash !== (await sha(`${userId}:${code}`))) {
+    await admin.from("password_reset_codes").update({ attempts: row.attempts + 1 }).eq("id", row.id);
+    return null;
+  }
+  return row;
+}
 
 type Admin = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
 
@@ -80,6 +114,8 @@ export const Route = createFileRoute("/api/public/student-account")({
           if (await phoneTaken(supabaseAdmin, body.phone)) {
             return Response.json({ error: "phone_taken" }, { status: 409 });
           }
+          const { data: em } = await supabaseAdmin.from("profiles").select("id").ilike("real_email", body.email).limit(1);
+          if (em && em.length) return Response.json({ error: "email_taken" }, { status: 409 });
           const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
             email: emailFor(body.username),
             password: body.password,
@@ -96,9 +132,37 @@ export const Route = createFileRoute("/api/public/student-account")({
               username: body.username,
               phone: body.phone,
               email: emailFor(body.username),
+              real_email: body.email,
             },
             { onConflict: "id" },
           );
+          return Response.json({ ok: true });
+        }
+
+        if (body.action === "forgot_start") {
+          const mismatch = Response.json({ error: "mismatch" }, { status: 400 });
+          const p = await findForReset(supabaseAdmin, body.username);
+          if (!p || !p.real_email || p.phone !== body.phone.trim() || p.real_email.toLowerCase() !== body.email) return mismatch;
+          const code = String(crypto.getRandomValues(new Uint32Array(1))[0]! % 1000000).padStart(6, "0");
+          await supabaseAdmin.from("password_reset_codes").delete().eq("user_id", p.id);
+          await supabaseAdmin.from("password_reset_codes").insert({
+            user_id: p.id,
+            code_hash: await sha(`${p.id}:${code}`),
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+          });
+          const { sendResetCodeEmail } = await import("@/lib/reset-email.server");
+          const sent = await sendResetCodeEmail(p.real_email, code);
+          return Response.json({ ok: true, sent });
+        }
+
+        if (body.action === "forgot_verify" || body.action === "forgot_reset") {
+          const p = await findForReset(supabaseAdmin, body.username);
+          const row = p ? await checkCode(supabaseAdmin, p.id, body.code) : null;
+          if (!p || !row) return Response.json({ error: "bad_code" }, { status: 400 });
+          if (body.action === "forgot_verify") return Response.json({ ok: true });
+          const { error } = await supabaseAdmin.auth.admin.updateUserById(p.id, { password: body.password });
+          if (error) return Response.json({ error: "failed" }, { status: 500 });
+          await supabaseAdmin.from("password_reset_codes").delete().eq("user_id", p.id);
           return Response.json({ ok: true });
         }
 
