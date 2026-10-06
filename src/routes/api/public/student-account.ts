@@ -130,9 +130,37 @@ export const Route = createFileRoute("/api/public/student-account")({
               username: body.username,
               phone: body.phone,
               email: emailFor(body.username),
+              real_email: body.email,
             },
             { onConflict: "id" },
           );
+          return Response.json({ ok: true });
+        }
+
+        if (body.action === "forgot_start") {
+          const mismatch = Response.json({ error: "mismatch" }, { status: 400 });
+          const p = await findForReset(supabaseAdmin, body.username);
+          if (!p || !p.real_email || p.phone !== body.phone.trim() || p.real_email.toLowerCase() !== body.email) return mismatch;
+          const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+          await supabaseAdmin.from("password_reset_codes").delete().eq("user_id", p.id);
+          await supabaseAdmin.from("password_reset_codes").insert({
+            user_id: p.id,
+            code_hash: await sha(`${p.id}:${code}`),
+            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+          });
+          const { sendResetCodeEmail } = await import("@/lib/reset-email.server");
+          const sent = await sendResetCodeEmail(p.real_email, code);
+          return Response.json({ ok: true, sent });
+        }
+
+        if (body.action === "forgot_verify" || body.action === "forgot_reset") {
+          const p = await findForReset(supabaseAdmin, body.username);
+          const row = p ? await checkCode(supabaseAdmin, p.id, body.code) : null;
+          if (!p || !row) return Response.json({ error: "bad_code" }, { status: 400 });
+          if (body.action === "forgot_verify") return Response.json({ ok: true });
+          const { error } = await supabaseAdmin.auth.admin.updateUserById(p.id, { password: body.password });
+          if (error) return Response.json({ error: "failed" }, { status: 500 });
+          await supabaseAdmin.from("password_reset_codes").delete().eq("user_id", p.id);
           return Response.json({ ok: true });
         }
 
