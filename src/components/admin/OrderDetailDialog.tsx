@@ -1,3 +1,4 @@
+import { shortRef } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -120,7 +121,7 @@ export function OrderDetailDialog({
                 {order.title}
                 <Pill tone={statusTone(order.status)}>{order.status.replace("_", " ")}</Pill>
               </DialogTitle>
-              <DialogDescription className="font-mono text-xs">{order.reference}</DialogDescription>
+              <DialogDescription className="font-mono text-xs">Order {shortRef(order.reference)} · {order.reference}</DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 sm:grid-cols-2">

@@ -1,3 +1,4 @@
+import { shortRef } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -118,7 +119,7 @@ function Orders() {
             className="cursor-pointer border-b last:border-0 hover:bg-muted/50"
             onClick={() => setSelected(o as AdminOrder)}
           >
-            <td className="px-4 py-3 font-mono text-xs">{o.reference}</td>
+            <td className="px-4 py-3 font-mono text-xs" title={o.reference}>{shortRef(o.reference)}</td>
             <td className="px-4 py-3 font-semibold">{o.title}</td>
             <td className="px-4 py-3">{o.student?.full_name ?? "—"}</td>
             <td className="px-4 py-3">{o.vendor?.business_name ?? "—"}</td>
