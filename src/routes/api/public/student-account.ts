@@ -143,7 +143,7 @@ export const Route = createFileRoute("/api/public/student-account")({
           const mismatch = Response.json({ error: "mismatch" }, { status: 400 });
           const p = await findForReset(supabaseAdmin, body.username);
           if (!p || !p.real_email || p.phone !== body.phone.trim() || p.real_email.toLowerCase() !== body.email) return mismatch;
-          const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1000000).padStart(6, "0");
+          const code = String(crypto.getRandomValues(new Uint32Array(1))[0]! % 1000000).padStart(6, "0");
           await supabaseAdmin.from("password_reset_codes").delete().eq("user_id", p.id);
           await supabaseAdmin.from("password_reset_codes").insert({
             user_id: p.id,
