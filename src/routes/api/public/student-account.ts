@@ -114,6 +114,8 @@ export const Route = createFileRoute("/api/public/student-account")({
           if (await phoneTaken(supabaseAdmin, body.phone)) {
             return Response.json({ error: "phone_taken" }, { status: 409 });
           }
+          const { data: em } = await supabaseAdmin.from("profiles").select("id").ilike("real_email", body.email).limit(1);
+          if (em && em.length) return Response.json({ error: "email_taken" }, { status: 409 });
           const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
             email: emailFor(body.username),
             password: body.password,
