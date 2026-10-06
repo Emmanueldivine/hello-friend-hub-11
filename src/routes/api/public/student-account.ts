@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 const DOMAIN = "students.unieveryhelp.com";
 const emailFor = (username: string) => `${username.toLowerCase()}@${DOMAIN}`;
 
+const emailSchema = z.string().trim().toLowerCase().email().max(120);
 const bodySchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("check"), username: z.string().max(40), phone: z.string().max(20).optional() }),
   z.object({
@@ -15,10 +16,43 @@ const bodySchema = z.discriminatedUnion("action", [
     fullName: z.string().min(3).max(80),
     username: z.string().regex(/^[a-z0-9_]{3,12}$/),
     phone: z.string().regex(/^0\d{10}$/),
+    email: emailSchema,
     password: z.string().min(6).max(72),
   }),
   z.object({ action: z.literal("login"), identifier: z.string().min(1).max(40), password: z.string().min(1).max(72) }),
+  z.object({ action: z.literal("forgot_start"), username: z.string().min(1).max(40), phone: z.string().max(20), email: emailSchema }),
+  z.object({ action: z.literal("forgot_verify"), username: z.string().min(1).max(40), code: z.string().regex(/^\d{6}$/) }),
+  z.object({
+    action: z.literal("forgot_reset"),
+    username: z.string().min(1).max(40),
+    code: z.string().regex(/^\d{6}$/),
+    password: z.string().min(6).max(72),
+  }),
 ]);
+
+async function sha(s: string) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function findForReset(admin: Admin, username: string) {
+  const { data } = await admin.from("profiles").select("id, username, phone, real_email").ilike("username", username.trim().toLowerCase()).limit(1);
+  return data?.[0] ?? null;
+}
+
+/** Returns the live code row if the code is right; counts wrong tries (max 5). */
+async function checkCode(admin: Admin, userId: string, code: string) {
+  const { data } = await admin
+    .from("password_reset_codes").select("*").eq("user_id", userId)
+    .order("created_at", { ascending: false }).limit(1);
+  const row = data?.[0];
+  if (!row || new Date(row.expires_at).getTime() < Date.now() || row.attempts >= 5) return null;
+  if (row.code_hash !== (await sha(`${userId}:${code}`))) {
+    await admin.from("password_reset_codes").update({ attempts: row.attempts + 1 }).eq("id", row.id);
+    return null;
+  }
+  return row;
+}
 
 type Admin = (typeof import("@/integrations/supabase/client.server"))["supabaseAdmin"];
 
