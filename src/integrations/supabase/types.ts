@@ -240,6 +240,33 @@ export type Database = {
           },
         ]
       }
+      password_reset_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -254,6 +281,7 @@ export type Database = {
           matric_number: string | null
           phone: string | null
           profile_completed: boolean
+          real_email: string | null
           school: string | null
           username: string | null
         }
@@ -270,6 +298,7 @@ export type Database = {
           matric_number?: string | null
           phone?: string | null
           profile_completed?: boolean
+          real_email?: string | null
           school?: string | null
           username?: string | null
         }
@@ -286,6 +315,7 @@ export type Database = {
           matric_number?: string | null
           phone?: string | null
           profile_completed?: boolean
+          real_email?: string | null
           school?: string | null
           username?: string | null
         }
