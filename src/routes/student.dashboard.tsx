@@ -46,7 +46,10 @@ function StudentDashboard() {
       setReady(true);
     }
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return navigate({ to: "/student/login", replace: true });
+      if (!data.user) {
+        navigate({ to: "/student/login", replace: true });
+        return;
+      }
       uid = data.user.id;
       load();
       channel = supabase
