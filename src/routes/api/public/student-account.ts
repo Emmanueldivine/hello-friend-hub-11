@@ -187,6 +187,7 @@ export const Route = createFileRoute("/api/public/student-account")({
         if (signErr) return Response.json({ error: "wrong_password" }, { status: 401 });
         return Response.json({
           ok: true,
+          authEmail: profile.email,
           user: {
             fullName: profile.full_name,
             username: profile.username || profile.email.split("@")[0],
