@@ -24,8 +24,11 @@ import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as StudentLoginRouteImport } from './routes/student.login'
+import { Route as StudentOrderRouteImport } from './routes/student.order'
+import { Route as StudentWalletRouteImport } from './routes/student.wallet'
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
 import { Route as ApiPublicStudentAccountRouteImport } from './routes/api/public/student-account'
+import { Route as ApiPublicStudentPortalRouteImport } from './routes/api/public/student-portal'
 import { Route as ApiPublicStudentSyncRouteImport } from './routes/api/public/student-sync'
 
 const IndexRoute = IndexRouteImport.update({
@@ -103,6 +106,16 @@ const StudentLoginRoute = StudentLoginRouteImport.update({
   path: '/student/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentOrderRoute = StudentOrderRouteImport.update({
+  id: '/student/order',
+  path: '/student/order',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentWalletRoute = StudentWalletRouteImport.update({
+  id: '/student/wallet',
+  path: '/student/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicOrderStatusRoute = ApiPublicOrderStatusRouteImport.update({
   id: '/api/public/order-status',
   path: '/api/public/order-status',
@@ -111,6 +124,11 @@ const ApiPublicOrderStatusRoute = ApiPublicOrderStatusRouteImport.update({
 const ApiPublicStudentAccountRoute = ApiPublicStudentAccountRouteImport.update({
   id: '/api/public/student-account',
   path: '/api/public/student-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicStudentPortalRoute = ApiPublicStudentPortalRouteImport.update({
+  id: '/api/public/student-portal',
+  path: '/api/public/student-portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicStudentSyncRoute = ApiPublicStudentSyncRouteImport.update({
@@ -134,9 +152,12 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/order': typeof StudentOrderRoute
+  '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
+  '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRoutesByTo {
@@ -153,9 +174,12 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/order': typeof StudentOrderRoute
+  '/student/wallet': typeof StudentWalletRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
+  '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRoutesById {
@@ -174,9 +198,12 @@ export interface FileRoutesById {
   '/admin_/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/order': typeof StudentOrderRoute
+  '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
+  '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
 }
 export interface FileRouteTypes {
@@ -196,9 +223,12 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/order'
+    | '/student/wallet'
     | '/admin/'
     | '/api/public/order-status'
     | '/api/public/student-account'
+    | '/api/public/student-portal'
     | '/api/public/student-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -215,9 +245,12 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/order'
+    | '/student/wallet'
     | '/admin'
     | '/api/public/order-status'
     | '/api/public/student-account'
+    | '/api/public/student-portal'
     | '/api/public/student-sync'
   id:
     | '__root__'
@@ -235,9 +268,12 @@ export interface FileRouteTypes {
     | '/admin_/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/order'
+    | '/student/wallet'
     | '/admin/'
     | '/api/public/order-status'
     | '/api/public/student-account'
+    | '/api/public/student-portal'
     | '/api/public/student-sync'
   fileRoutesById: FileRoutesById
 }
@@ -248,8 +284,11 @@ export interface RootRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
+  StudentOrderRoute: typeof StudentOrderRoute
+  StudentWalletRoute: typeof StudentWalletRoute
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
   ApiPublicStudentAccountRoute: typeof ApiPublicStudentAccountRoute
+  ApiPublicStudentPortalRoute: typeof ApiPublicStudentPortalRoute
   ApiPublicStudentSyncRoute: typeof ApiPublicStudentSyncRoute
 }
 
@@ -360,6 +399,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/order': {
+      id: '/student/order'
+      path: '/student/order'
+      fullPath: '/student/order'
+      preLoaderRoute: typeof StudentOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/wallet': {
+      id: '/student/wallet'
+      path: '/student/wallet'
+      fullPath: '/student/wallet'
+      preLoaderRoute: typeof StudentWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/order-status': {
       id: '/api/public/order-status'
       path: '/api/public/order-status'
@@ -372,6 +425,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/student-account'
       fullPath: '/api/public/student-account'
       preLoaderRoute: typeof ApiPublicStudentAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/student-portal': {
+      id: '/api/public/student-portal'
+      path: '/api/public/student-portal'
+      fullPath: '/api/public/student-portal'
+      preLoaderRoute: typeof ApiPublicStudentPortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/student-sync': {
@@ -417,8 +477,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
+  StudentOrderRoute: StudentOrderRoute,
+  StudentWalletRoute: StudentWalletRoute,
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
   ApiPublicStudentAccountRoute: ApiPublicStudentAccountRoute,
+  ApiPublicStudentPortalRoute: ApiPublicStudentPortalRoute,
   ApiPublicStudentSyncRoute: ApiPublicStudentSyncRoute,
 }
 export const routeTree = rootRouteImport
