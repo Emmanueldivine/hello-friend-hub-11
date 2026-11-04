@@ -3,13 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
-/** Native student portal actions. Prices are computed on the server (same table as the original portal). */
-const prices: Record<string, Record<string, number[]>> = {
-  cheap: { "24": [1500, 2500, 3500, 4500, 5500, 7000, 9000], "48": [1000, 1800, 2600, 3400, 4200, 5500, 7000], "72": [600, 1000, 1600, 2200, 2800, 3800, 5000] },
-  technical: { "24": [3000, 5000, 7000, 9000, 11000, 14000, 18000], "48": [2000, 3500, 5000, 6500, 8000, 10500, 13000], "72": [1500, 2500, 3500, 4500, 5500, 7000, 9000] },
-};
-export const priceFor = (track: string, pages: number, hours: string) =>
-  prices[track]?.[hours]?.[Math.min(Math.max(pages || 1, 1), 7) - 1] ?? 0;
+import { priceFor } from "@/lib/student-pricing";
 
 const body = z.discriminatedUnion("action", [
   z.object({

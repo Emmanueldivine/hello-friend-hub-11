@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StudentShell, btnStyle, inputStyle, studentTheme } from "@/components/student/StudentShell";
 import { studentPortal } from "@/lib/student-api";
-import { priceFor } from "@/routes/api/public/student-portal";
+import { priceFor } from "@/lib/student-pricing";
 import { shortRef } from "@/lib/utils";
 
 export const Route = createFileRoute("/student/order")({

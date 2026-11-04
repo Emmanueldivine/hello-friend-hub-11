@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { StudentShell, studentTheme } from "@/components/student/StudentShell";
@@ -95,11 +95,16 @@ function StudentDashboard() {
                   <div style={{ fontWeight: 600 }}>{o.title}</div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>Order {shortRef(o.reference)} · ₦{Number(o.amount).toLocaleString()}</div>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{statusLabel[o.status] ?? o.status}</span>
+                <div style={{ minWidth: 110, textAlign: "right" }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{statusLabel[o.status] ?? o.status}</span>
+                  <div style={{ height: 6, background: studentTheme.line, borderRadius: 6, marginTop: 6 }}>
+                    <div style={{ height: 6, borderRadius: 6, width: `${o.status === "completed" ? 100 : Math.min(o.progress, 90)}%`, background: o.status === "completed" ? "#059669" : o.status === "under_review" ? "#7c3aed" : o.progress > 20 ? "#f97316" : "#94a3b8" }} />
+                  </div>
+                </div>
               </div>
             ))}
             <p style={{ fontSize: 13, marginTop: 10 }}>
-              To post a new assignment or see progress details, use the <a href="/" style={{ fontWeight: 700, color: studentTheme.navy }}>main portal</a>.
+              <Link to="/student/order" style={{ fontWeight: 700, color: studentTheme.navy }}>+ Post an assignment</Link> · <Link to="/student/wallet" style={{ fontWeight: 700, color: studentTheme.navy }}>Wallet</Link> · <a href="/" style={{ color: studentTheme.navy }}>Main portal</a>
             </p>
           </div>
         </>
