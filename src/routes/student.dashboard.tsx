@@ -104,7 +104,7 @@ function StudentDashboard() {
               </div>
             ))}
             <p style={{ fontSize: 13, marginTop: 10 }}>
-              <Link to="/student/order" style={{ fontWeight: 700, color: studentTheme.navy }}>+ Post an assignment</Link> · <Link to="/student/wallet" style={{ fontWeight: 700, color: studentTheme.navy }}>Wallet</Link> · <a href="/" style={{ color: studentTheme.navy }}>Main portal</a>
+              <Link to="/student/order" style={{ fontWeight: 700, color: studentTheme.navy }}>+ Post an assignment</Link> · <Link to="/student/wallet" search={{}} style={{ fontWeight: 700, color: studentTheme.navy }}>Wallet</Link> · <a href="/" style={{ color: studentTheme.navy }}>Main portal</a>
             </p>
           </div>
         </>

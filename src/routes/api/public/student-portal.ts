@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/public/student-portal")({
       POST: async ({ request }) => {
         const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
         if (!token) return Response.json({ error: "unauthorized" }, { status: 401 });
-        const anon = createClient<Database>(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
+        const anon = createClient<Database>(process.env["SUPABASE_URL"]!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, { auth: { persistSession: false, autoRefreshToken: false } });
         const { data: u } = await anon.auth.getUser(token);
         if (!u.user) return Response.json({ error: "unauthorized" }, { status: 401 });
         const parsed = body.safeParse(await request.json().catch(() => null));

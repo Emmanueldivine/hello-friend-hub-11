@@ -6,7 +6,7 @@ import { studentPortal } from "@/lib/student-api";
 
 export const Route = createFileRoute("/student/wallet")({
   ssr: false,
-  validateSearch: (s: Record<string, unknown>) => ({ required: s.required ? Number(s.required) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { required?: number } => ({ required: s["required"] ? Number(s["required"]) : undefined }),
   head: () => ({
     meta: [
       { title: "My Wallet | Unieveryhelp" },
