@@ -19,6 +19,8 @@ const body = z.discriminatedUnion("action", [
     level: z.string().trim().max(20).optional(),
   }),
   z.object({ action: z.literal("topup"), amount: z.number().int().min(100).max(10_000_000) }),
+  z.object({ action: z.literal("detail"), id: z.string().uuid() }),
+  z.object({ action: z.literal("cancel"), id: z.string().uuid() }),
 ]);
 
 export const Route = createFileRoute("/api/public/student-portal")({
@@ -35,6 +37,34 @@ export const Route = createFileRoute("/api/public/student-portal")({
         const { supabaseAdmin: admin } = await import("@/integrations/supabase/client.server");
         const uid = u.user.id;
         const d = parsed.data;
+
+        if (d.action === "detail") {
+          const { data: o } = await admin.from("orders").select("*").eq("id", d.id).eq("student_id", uid).maybeSingle();
+          if (!o) return Response.json({ error: "not_found" }, { status: 404 });
+          const { data: p } = await admin.from("profiles").select("full_name, username").eq("id", uid).maybeSingle();
+          let downloadUrl: string | null = null;
+          if (o.status === "completed" && o.final_file_url) {
+            if (/^https?:/.test(o.final_file_url)) downloadUrl = o.final_file_url;
+            else {
+              const s = await admin.storage.from("order-final-files").createSignedUrl(o.final_file_url, 3600);
+              downloadUrl = s.data?.signedUrl ?? null;
+            }
+          }
+          return Response.json({ ok: true, order: o, student: p, downloadUrl });
+        }
+
+        if (d.action === "cancel") {
+          // Only while still "Received" — locks the moment staff start work.
+          const { data: o } = await admin.from("orders").update({ status: "cancelled" })
+            .eq("id", d.id).eq("student_id", uid).eq("status", "pending").select("id, amount, reference").maybeSingle();
+          if (!o) return Response.json({ error: "locked" }, { status: 409 });
+          const { data: w } = await admin.from("wallets").select("id, balance").eq("user_id", uid).maybeSingle();
+          const next = Number(w?.balance ?? 0) + Number(o.amount);
+          if (w) await admin.from("wallets").update({ balance: next }).eq("id", w.id);
+          else await admin.from("wallets").insert({ user_id: uid, balance: next });
+          await admin.from("transactions").insert({ user_id: uid, amount: Number(o.amount), type: "refund", status: "success", reference: `RF-${o.reference}`, order_id: o.id });
+          return Response.json({ ok: true, balance: next });
+        }
 
         const { data: wallet } = await admin.from("wallets").select("id, balance").eq("user_id", uid).maybeSingle();
         const balance = Number(wallet?.balance ?? 0);
