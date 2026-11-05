@@ -90,7 +90,7 @@ function StudentDashboard() {
             <strong>My assignments ({orders.length})</strong>
             {orders.length === 0 && <p style={{ fontSize: 14 }}>No assignments yet.</p>}
             {orders.map((o) => (
-              <div key={o.id} style={{ borderTop: `1px solid ${studentTheme.line}`, padding: "10px 0", display: "flex", justifyContent: "space-between", gap: 10 }}>
+              <Link key={o.id} to="/student/assignment/$id" params={{ id: o.id }} style={{ borderTop: `1px solid ${studentTheme.line}`, padding: "10px 0", display: "flex", justifyContent: "space-between", gap: 10, color: "inherit", textDecoration: "none" }}>
                 <div>
                   <div style={{ fontWeight: 600 }}>{o.title}</div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>Order {shortRef(o.reference)} · ₦{Number(o.amount).toLocaleString()}</div>
@@ -101,7 +101,7 @@ function StudentDashboard() {
                     <div style={{ height: 6, borderRadius: 6, width: `${o.status === "completed" ? 100 : Math.min(o.progress, 90)}%`, background: o.status === "completed" ? "#059669" : o.status === "under_review" ? "#7c3aed" : o.progress > 20 ? "#f97316" : "#94a3b8" }} />
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
             <p style={{ fontSize: 13, marginTop: 10 }}>
               <Link to="/student/order" style={{ fontWeight: 700, color: studentTheme.navy }}>+ Post an assignment</Link> · <Link to="/student/wallet" search={{}} style={{ fontWeight: 700, color: studentTheme.navy }}>Wallet</Link> · <a href="/" style={{ color: studentTheme.navy }}>Main portal</a>

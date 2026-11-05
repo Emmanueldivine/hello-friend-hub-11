@@ -30,6 +30,7 @@ import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/or
 import { Route as ApiPublicStudentAccountRouteImport } from './routes/api/public/student-account'
 import { Route as ApiPublicStudentPortalRouteImport } from './routes/api/public/student-portal'
 import { Route as ApiPublicStudentSyncRouteImport } from './routes/api/public/student-sync'
+import { Route as StudentAssignmentIdRouteImport } from './routes/student.assignment.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -136,6 +137,11 @@ const ApiPublicStudentSyncRoute = ApiPublicStudentSyncRouteImport.update({
   path: '/api/public/student-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentAssignmentIdRoute = StudentAssignmentIdRouteImport.update({
+  id: '/student/assignment/$id',
+  path: '/student/assignment/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
   '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
+  '/student/assignment/$id': typeof StudentAssignmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
   '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
+  '/student/assignment/$id': typeof StudentAssignmentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/api/public/student-account': typeof ApiPublicStudentAccountRoute
   '/api/public/student-portal': typeof ApiPublicStudentPortalRoute
   '/api/public/student-sync': typeof ApiPublicStudentSyncRoute
+  '/student/assignment/$id': typeof StudentAssignmentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/api/public/student-account'
     | '/api/public/student-portal'
     | '/api/public/student-sync'
+    | '/student/assignment/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/api/public/student-account'
     | '/api/public/student-portal'
     | '/api/public/student-sync'
+    | '/student/assignment/$id'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/api/public/student-account'
     | '/api/public/student-portal'
     | '/api/public/student-sync'
+    | '/student/assignment/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -290,6 +302,7 @@ export interface RootRouteChildren {
   ApiPublicStudentAccountRoute: typeof ApiPublicStudentAccountRoute
   ApiPublicStudentPortalRoute: typeof ApiPublicStudentPortalRoute
   ApiPublicStudentSyncRoute: typeof ApiPublicStudentSyncRoute
+  StudentAssignmentIdRoute: typeof StudentAssignmentIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -441,6 +454,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStudentSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/assignment/$id': {
+      id: '/student/assignment/$id'
+      path: '/student/assignment/$id'
+      fullPath: '/student/assignment/$id'
+      preLoaderRoute: typeof StudentAssignmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -483,6 +503,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicStudentAccountRoute: ApiPublicStudentAccountRoute,
   ApiPublicStudentPortalRoute: ApiPublicStudentPortalRoute,
   ApiPublicStudentSyncRoute: ApiPublicStudentSyncRoute,
+  StudentAssignmentIdRoute: StudentAssignmentIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
