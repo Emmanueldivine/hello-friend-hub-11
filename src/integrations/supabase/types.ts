@@ -166,6 +166,7 @@ export type Database = {
         Row: {
           amount: number
           assignment_id: string | null
+          cancellation_reason: string | null
           commission: number
           completed_at: string | null
           course_code: string | null
@@ -186,6 +187,7 @@ export type Database = {
         Insert: {
           amount?: number
           assignment_id?: string | null
+          cancellation_reason?: string | null
           commission?: number
           completed_at?: string | null
           course_code?: string | null
@@ -206,6 +208,7 @@ export type Database = {
         Update: {
           amount?: number
           assignment_id?: string | null
+          cancellation_reason?: string | null
           commission?: number
           completed_at?: string | null
           course_code?: string | null
