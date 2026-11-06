@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { naira } from "@/lib/admin-permissions";
+import { cancellationReasonLabel } from "@/lib/cancellation-reasons";
 
 export type AdminOrder = {
   id: string;
@@ -33,6 +34,7 @@ export type AdminOrder = {
   final_file_url: string | null;
   final_file_name: string | null;
   completed_at: string | null;
+  cancellation_reason: string | null;
   student?: { full_name?: string | null; email?: string | null; school?: string | null; phone?: string | null };
 };
 
@@ -119,7 +121,7 @@ export function OrderDetailDialog({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-3">
                 {order.title}
-                <Pill tone={statusTone(order.status)}>{order.status.replace("_", " ")}</Pill>
+                <Pill tone={statusTone(order.status)}>{order.status === "cancelled" ? "Cancelled · refunded" : order.status.replace("_", " ")}</Pill>
               </DialogTitle>
               <DialogDescription className="font-mono text-xs">Order {shortRef(order.reference)} · {order.reference}</DialogDescription>
             </DialogHeader>
@@ -133,6 +135,7 @@ export function OrderDetailDialog({
               <Field label="Deadline" value={when(order.deadline)} />
               <Field label="Price" value={naira(order.amount)} />
               <Field label="Completed at" value={when(order.completed_at)} />
+              {order.status === "cancelled" ? <Field label="Cancellation reason" value={cancellationReasonLabel(order.cancellation_reason)} /> : null}
             </div>
 
             <div className="mt-2">

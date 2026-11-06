@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { naira } from "@/lib/admin-permissions";
+import { cancellationReasonLabel } from "@/lib/cancellation-reasons";
 
 export const Route = createFileRoute("/admin/orders")({
   component: () => (
@@ -126,21 +127,28 @@ function Orders() {
             <td className="px-4 py-3">{naira(o.amount)}</td>
             <td className="px-4 py-3 text-muted-foreground">{naira(o.commission)}</td>
             <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-              <Select
-                value={String(o.status)}
-                onValueChange={(status) => setStatus.mutate({ id: o.id, status })}
-              >
-                <SelectTrigger className="h-8 w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s.replace("_", " ")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {o.status === "cancelled" ? (
+                <div className="max-w-56 space-y-1">
+                  <Pill tone="bad">Cancelled · refunded</Pill>
+                  {o.cancellation_reason ? <p className="text-xs text-muted-foreground">{cancellationReasonLabel(o.cancellation_reason)}</p> : null}
+                </div>
+              ) : (
+                <Select
+                  value={String(o.status)}
+                  onValueChange={(status) => setStatus.mutate({ id: o.id, status })}
+                >
+                  <SelectTrigger className="h-8 w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </td>
             <td className="px-4 py-3 text-muted-foreground">
               {new Date(o.created_at as string).toLocaleDateString()}

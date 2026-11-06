@@ -5,6 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { StudentShell, studentTheme } from "@/components/student/StudentShell";
 import { studentPortal } from "@/lib/student-api";
 import { shortRef } from "@/lib/utils";
+import { CANCELLATION_REASONS, type CancellationReason } from "@/lib/cancellation-reasons";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/student/assignment/$id")({
   ssr: false,
@@ -26,6 +29,7 @@ type Order = {
   id: string; reference: string; title: string; course_code: string | null; description: string | null;
   amount: number; status: string; progress: number; deadline: string | null; created_at: string;
   student_files: FileItem[] | null;
+  cancellation_reason: CancellationReason | null;
 };
 
 const statusLabel: Record<string, string> = { pending: "Received", in_progress: "In Progress", under_review: "Under Review", completed: "Completed", cancelled: "Cancelled" };
@@ -38,6 +42,7 @@ function AssignmentDetail() {
   const [download, setDownload] = useState<string | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "missing">("loading");
   const [busy, setBusy] = useState(false);
+  const [cancelReason, setCancelReason] = useState<CancellationReason | "">("");
 
   const load = useCallback(async () => {
     const r = await studentPortal({ action: "detail", id });
@@ -58,11 +63,11 @@ function AssignmentDetail() {
   }, [id, load]);
 
   async function cancel() {
-    if (!confirm("Cancel this assignment? The full amount goes back to your wallet.")) return;
+    if (!cancelReason) return;
     setBusy(true);
-    const r = await studentPortal({ action: "cancel", id });
+    const r = await studentPortal({ action: "cancel", id, reason: cancelReason });
     setBusy(false);
-    if (r.status === 200) { toast.success("Assignment cancelled. Money returned to your wallet."); load(); }
+    if (r.status === 200) { toast.success("Assignment cancelled. Money returned to your wallet."); setCancelReason(""); load(); }
     else if (r.status === 409) { toast.error("Work has already started, so this assignment can no longer be cancelled."); load(); }
     else toast.error("Unable to cancel right now. Please try again.");
   }
@@ -98,6 +103,11 @@ function AssignmentDetail() {
           <a href={download} target="_blank" rel="noreferrer" style={{ display: "block", marginTop: 14, textAlign: "center", background: "#059669", color: "#fff", borderRadius: 12, padding: 12, fontWeight: 700, textDecoration: "none" }}>Download solution</a>
         )}
         {done && <p style={{ fontSize: 12, marginTop: 8, opacity: 0.75 }}>All downloads delete after 5 days, save to your device.</p>}
+        {order.status === "cancelled" && order.cancellation_reason && (
+          <p style={{ fontSize: 13, marginTop: 12, borderTop: `1px solid ${studentTheme.line}`, paddingTop: 10 }}>
+            Cancellation reason: {CANCELLATION_REASONS.find((reason) => reason.value === order.cancellation_reason)?.label ?? "—"}
+          </p>
+        )}
       </div>
       <div style={card}>
         {row("Order number", <span>{shortNo} <button onClick={() => { navigator.clipboard.writeText(shortNo); toast.success("Order number copied"); }} style={{ marginLeft: 6, border: `1px solid ${studentTheme.line}`, background: "none", borderRadius: 8, padding: "2px 8px", cursor: "pointer", fontSize: 12 }}>Copy</button></span>)}
@@ -115,7 +125,16 @@ function AssignmentDetail() {
       {order.status === "pending" && (
         <div style={card}>
           <p style={{ fontSize: 13, margin: "0 0 10px" }}>You can cancel until a staff member starts working on it. Your money returns to your wallet.</p>
-          <button disabled={busy} onClick={cancel} style={{ width: "100%", background: "#dc2626", color: "#fff", border: "none", borderRadius: 12, padding: 12, fontWeight: 700, cursor: "pointer", opacity: busy ? 0.6 : 1 }}>{busy ? "Cancelling…" : "Cancel assignment"}</button>
+          <p style={{ fontSize: 13, fontWeight: 700, margin: "0 0 8px" }}>Why are you cancelling?</p>
+          <RadioGroup value={cancelReason} onValueChange={(value) => setCancelReason(value as CancellationReason)} className="gap-2">
+            {CANCELLATION_REASONS.map((reason) => (
+              <Label key={reason.value} htmlFor={`cancel-reason-${reason.value}`} className="flex cursor-pointer items-start gap-2 rounded-md border border-input p-3 text-sm font-normal leading-snug">
+                <RadioGroupItem id={`cancel-reason-${reason.value}`} value={reason.value} className="mt-0.5" />
+                <span>{reason.label}</span>
+              </Label>
+            ))}
+          </RadioGroup>
+          <button disabled={busy || !cancelReason} onClick={cancel} style={{ width: "100%", marginTop: 12, background: "#dc2626", color: "#fff", border: "none", borderRadius: 12, padding: 12, fontWeight: 700, cursor: "pointer", opacity: busy || !cancelReason ? 0.6 : 1 }}>{busy ? "Cancelling…" : "Cancel assignment"}</button>
         </div>
       )}
     </StudentShell>

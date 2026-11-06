@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 import { priceFor } from "@/lib/student-pricing";
+import { cancellationReasonSchema } from "@/lib/cancellation-reasons";
 
 const body = z.discriminatedUnion("action", [
   z.object({
@@ -20,7 +21,7 @@ const body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("topup"), amount: z.number().int().min(100).max(10_000_000) }),
   z.object({ action: z.literal("detail"), id: z.string().uuid() }),
-  z.object({ action: z.literal("cancel"), id: z.string().uuid() }),
+  z.object({ action: z.literal("cancel"), id: z.string().uuid(), reason: cancellationReasonSchema }),
 ]);
 
 export const Route = createFileRoute("/api/public/student-portal")({
@@ -55,7 +56,7 @@ export const Route = createFileRoute("/api/public/student-portal")({
 
         if (d.action === "cancel") {
           // Only while still "Received" — locks the moment staff start work.
-          const { data: o } = await admin.from("orders").update({ status: "cancelled" })
+          const { data: o } = await admin.from("orders").update({ status: "cancelled", cancellation_reason: d.reason })
             .eq("id", d.id).eq("student_id", uid).eq("status", "pending").select("id, amount, reference").maybeSingle();
           if (!o) return Response.json({ error: "locked" }, { status: 409 });
           const { data: w } = await admin.from("wallets").select("id, balance").eq("user_id", uid).maybeSingle();
