@@ -24,6 +24,7 @@ import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as StudentLoginRouteImport } from './routes/student.login'
+import { Route as StudentMessagesRouteImport } from './routes/student.messages'
 import { Route as StudentOrderRouteImport } from './routes/student.order'
 import { Route as StudentWalletRouteImport } from './routes/student.wallet'
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
@@ -107,6 +108,11 @@ const StudentLoginRoute = StudentLoginRouteImport.update({
   path: '/student/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentMessagesRoute = StudentMessagesRouteImport.update({
+  id: '/student/messages',
+  path: '/student/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentOrderRoute = StudentOrderRouteImport.update({
   id: '/student/order',
   path: '/student/order',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/messages': typeof StudentMessagesRoute
   '/student/order': typeof StudentOrderRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/admin/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/messages': typeof StudentMessagesRoute
   '/student/order': typeof StudentOrderRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin': typeof AdminIndexRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/admin_/login': typeof AdminLoginRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
+  '/student/messages': typeof StudentMessagesRoute
   '/student/order': typeof StudentOrderRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/messages'
     | '/student/order'
     | '/student/wallet'
     | '/admin/'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/admin/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/messages'
     | '/student/order'
     | '/student/wallet'
     | '/admin'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin_/login'
     | '/student/dashboard'
     | '/student/login'
+    | '/student/messages'
     | '/student/order'
     | '/student/wallet'
     | '/admin/'
@@ -296,6 +308,7 @@ export interface RootRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
+  StudentMessagesRoute: typeof StudentMessagesRoute
   StudentOrderRoute: typeof StudentOrderRoute
   StudentWalletRoute: typeof StudentWalletRoute
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
@@ -412,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/messages': {
+      id: '/student/messages'
+      path: '/student/messages'
+      fullPath: '/student/messages'
+      preLoaderRoute: typeof StudentMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/order': {
       id: '/student/order'
       path: '/student/order'
@@ -497,6 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
+  StudentMessagesRoute: StudentMessagesRoute,
   StudentOrderRoute: StudentOrderRoute,
   StudentWalletRoute: StudentWalletRoute,
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
