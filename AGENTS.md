@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep school-name canonicalization in a shared pure utility so admin school counts and filters use the same rules and can be regression-tested.
