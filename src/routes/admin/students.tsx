@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { DataTable, Empty, Guard, PageHead, Pill } from "@/components/admin/AdminUI";
 import { supabase } from "@/integrations/supabase/client";
 import { UserDetailDialog } from "@/components/admin/UserDetailDialog";
+import { getSchoolGroupKey, getSchoolGroupLabel } from "@/lib/school-normalization";
 
 export const Route = createFileRoute("/admin/students")({
   component: () => (
@@ -52,15 +53,24 @@ function Students() {
   const students = data.filter((u) => !u.roles.some((r) => r === "super_admin" || r === "admin" || r === "vendor"));
   const schoolCounts = Object.entries(
     students.reduce<Record<string, number>>((acc, u) => {
-      const k = (u.school ?? "").trim() || "Not set";
-      acc[k] = (acc[k] ?? 0) + 1;
+      const name = (u.school ?? "").trim();
+      const key = name ? getSchoolGroupKey(name) : "not-set";
+      acc[key] = (acc[key] ?? 0) + 1;
       return acc;
     }, {}),
-  ).sort((a, b) => b[1] - a[1]);
+  )
+    .map(([key, count]) => {
+      const matchingSchool = students.find((u) => {
+        const name = (u.school ?? "").trim();
+        return name && getSchoolGroupKey(name) === key;
+      })?.school;
+      return [key, matchingSchool ? getSchoolGroupLabel(matchingSchool) : "Not set", count] as const;
+    })
+    .sort((a, b) => b[2] - a[2]);
   const rows = data.filter(
     (u) =>
-      (!school || ((u.school ?? "").trim() || "Not set") === school) &&
-      `${u.full_name ?? ""} ${u.email ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
+      (!school || ((u.school ?? "").trim() ? getSchoolGroupKey(u.school ?? "") : "not-set") === school) &&
+      `${u.full_name ?? ""} ${u.email ?? ""} ${u.phone ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
   );
 
   return (
@@ -70,11 +80,11 @@ function Students() {
         <p className="mb-3 text-sm font-semibold">Students by university · {students.length} total</p>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant={school === null ? "default" : "outline"} onClick={() => setSchool(null)}>
-            All ({data.length})
+            All ({students.length})
           </Button>
-          {schoolCounts.map(([name, n]) => (
-            <Button key={name} size="sm" variant={school === name ? "default" : "outline"} onClick={() => setSchool(name)}>
-              {name} ({n})
+          {schoolCounts.map(([key, name, count]) => (
+            <Button key={key} size="sm" variant={school === key ? "default" : "outline"} onClick={() => setSchool(key)}>
+              {name} ({count})
             </Button>
           ))}
         </div>
@@ -85,11 +95,12 @@ function Students() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
-      <DataTable head={["Name", "Email", "School", "Roles", "Status", "Last seen", "Joined", "Action"]}>
+      <DataTable head={["Name", "Email", "Phone", "School", "Roles", "Status", "Last seen", "Joined", "Action"]}>
         {rows.map((u) => (
           <tr key={u.id} className="cursor-pointer border-b last:border-0 hover:bg-muted/50" onClick={() => setOpenId(u.id)}>
             <td className="px-4 py-3 font-semibold">{u.full_name}</td>
             <td className="px-4 py-3">{u.email}</td>
+            <td className="px-4 py-3">{u.phone ?? "—"}</td>
             <td className="px-4 py-3">{u.school ?? "—"}</td>
             <td className="px-4 py-3">{u.roles.join(", ") || "student"}</td>
             <td className="px-4 py-3">
@@ -112,7 +123,7 @@ function Students() {
             </td>
           </tr>
         ))}
-        {rows.length === 0 ? <Empty colSpan={8} label="No users found" /> : null}
+        {rows.length === 0 ? <Empty colSpan={9} label="No users found" /> : null}
       </DataTable>
       <UserDetailDialog userId={openId} onClose={() => setOpenId(null)} />
     </>
