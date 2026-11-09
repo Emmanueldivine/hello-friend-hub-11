@@ -20,6 +20,7 @@ export const Route = createFileRoute("/admin/students")({
 function Students() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [school, setSchool] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
   const { data = [] } = useQuery({
@@ -48,13 +49,36 @@ function Students() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const rows = data.filter((u) =>
-    `${u.full_name ?? ""} ${u.email ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
+  const students = data.filter((u) => !u.roles.some((r) => r === "super_admin" || r === "sub_admin" || r === "admin"));
+  const schoolCounts = Object.entries(
+    students.reduce<Record<string, number>>((acc, u) => {
+      const k = (u.school ?? "").trim() || "Not set";
+      acc[k] = (acc[k] ?? 0) + 1;
+      return acc;
+    }, {}),
+  ).sort((a, b) => b[1] - a[1]);
+  const rows = data.filter(
+    (u) =>
+      (!school || ((u.school ?? "").trim() || "Not set") === school) &&
+      `${u.full_name ?? ""} ${u.email ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
   );
 
   return (
     <>
       <PageHead title="User Management" subtitle="Students and account holders on the marketplace" />
+      <div className="mb-4 rounded-xl border bg-card p-4">
+        <p className="mb-3 text-sm font-semibold">Students by university · {students.length} total</p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant={school === null ? "default" : "outline"} onClick={() => setSchool(null)}>
+            All ({data.length})
+          </Button>
+          {schoolCounts.map(([name, n]) => (
+            <Button key={name} size="sm" variant={school === name ? "default" : "outline"} onClick={() => setSchool(name)}>
+              {name} ({n})
+            </Button>
+          ))}
+        </div>
+      </div>
       <Input
         className="mb-4 max-w-xs"
         placeholder="Search name, email or school"
