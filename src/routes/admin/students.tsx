@@ -67,7 +67,7 @@ function Students() {
       return [key, matchingSchool ? getSchoolGroupLabel(matchingSchool) : "Not set", count] as const;
     })
     .sort((a, b) => b[2] - a[2]);
-  const rows = data.filter(
+  const rows = students.filter(
     (u) =>
       (!school || ((u.school ?? "").trim() ? getSchoolGroupKey(u.school ?? "") : "not-set") === school) &&
       `${u.full_name ?? ""} ${u.email ?? ""} ${u.phone ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
