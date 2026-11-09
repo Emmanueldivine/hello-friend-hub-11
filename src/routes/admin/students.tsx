@@ -69,7 +69,9 @@ function Students() {
     .sort((a, b) => b[2] - a[2]);
   const rows = data.filter(
     (u) =>
-      (!school || ((u.school ?? "").trim() ? getSchoolGroupKey(u.school ?? "") : "not-set") === school) &&
+      (!school ||
+        ((!u.roles.some((role) => role === "super_admin" || role === "admin" || role === "vendor")) &&
+          ((u.school ?? "").trim() ? getSchoolGroupKey(u.school ?? "") : "not-set") === school)) &&
       `${u.full_name ?? ""} ${u.email ?? ""} ${u.phone ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
   );
 
@@ -91,7 +93,7 @@ function Students() {
       </div>
       <Input
         className="mb-4 max-w-xs"
-        placeholder="Search name, email or school"
+        placeholder="Search name, email, phone or school"
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
