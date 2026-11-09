@@ -49,7 +49,7 @@ function Students() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const students = data.filter((u) => !u.roles.some((r) => r === "super_admin" || r === "sub_admin" || r === "admin"));
+  const students = data.filter((u) => !u.roles.some((r) => r === "super_admin" || r === "admin" || r === "vendor"));
   const schoolCounts = Object.entries(
     students.reduce<Record<string, number>>((acc, u) => {
       const k = (u.school ?? "").trim() || "Not set";
