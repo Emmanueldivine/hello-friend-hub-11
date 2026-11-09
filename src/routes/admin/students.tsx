@@ -67,7 +67,7 @@ function Students() {
       return [key, matchingSchool ? getSchoolGroupLabel(matchingSchool) : "Not set", count] as const;
     })
     .sort((a, b) => b[2] - a[2]);
-  const rows = students.filter(
+  const rows = data.filter(
     (u) =>
       (!school || ((u.school ?? "").trim() ? getSchoolGroupKey(u.school ?? "") : "not-set") === school) &&
       `${u.full_name ?? ""} ${u.email ?? ""} ${u.phone ?? ""} ${u.school ?? ""}`.toLowerCase().includes(q.toLowerCase()),
@@ -80,7 +80,7 @@ function Students() {
         <p className="mb-3 text-sm font-semibold">Students by university · {students.length} total</p>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant={school === null ? "default" : "outline"} onClick={() => setSchool(null)}>
-            All ({students.length})
+            All ({data.length})
           </Button>
           {schoolCounts.map(([key, name, count]) => (
             <Button key={key} size="sm" variant={school === key ? "default" : "outline"} onClick={() => setSchool(key)}>
