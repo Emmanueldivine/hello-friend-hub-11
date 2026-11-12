@@ -22,10 +22,14 @@ import { Route as AdminSubAdminsRouteImport } from './routes/admin/sub-admins'
 import { Route as AdminVendorsRouteImport } from './routes/admin/vendors'
 import { Route as AdminWalletRouteImport } from './routes/admin/wallet'
 import { Route as AdminLoginRouteImport } from './routes/admin_.login'
+import { Route as StudentAssignmentsRouteImport } from './routes/student.assignments'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as StudentLoginRouteImport } from './routes/student.login'
 import { Route as StudentMessagesRouteImport } from './routes/student.messages'
+import { Route as StudentNotificationsRouteImport } from './routes/student.notifications'
 import { Route as StudentOrderRouteImport } from './routes/student.order'
+import { Route as StudentSettingsRouteImport } from './routes/student.settings'
+import { Route as StudentSupportRouteImport } from './routes/student.support'
 import { Route as StudentWalletRouteImport } from './routes/student.wallet'
 import { Route as ApiPublicOrderStatusRouteImport } from './routes/api/public/order-status'
 import { Route as ApiPublicStudentAccountRouteImport } from './routes/api/public/student-account'
@@ -98,6 +102,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentAssignmentsRoute = StudentAssignmentsRouteImport.update({
+  id: '/student/assignments',
+  path: '/student/assignments',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentDashboardRoute = StudentDashboardRouteImport.update({
   id: '/student/dashboard',
   path: '/student/dashboard',
@@ -113,9 +122,24 @@ const StudentMessagesRoute = StudentMessagesRouteImport.update({
   path: '/student/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentNotificationsRoute = StudentNotificationsRouteImport.update({
+  id: '/student/notifications',
+  path: '/student/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StudentOrderRoute = StudentOrderRouteImport.update({
   id: '/student/order',
   path: '/student/order',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentSettingsRoute = StudentSettingsRouteImport.update({
+  id: '/student/settings',
+  path: '/student/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentSupportRoute = StudentSupportRouteImport.update({
+  id: '/student/support',
+  path: '/student/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentWalletRoute = StudentWalletRouteImport.update({
@@ -162,10 +186,14 @@ export interface FileRoutesByFullPath {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/login': typeof AdminLoginRoute
+  '/student/assignments': typeof StudentAssignmentsRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
   '/student/messages': typeof StudentMessagesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/student/order': typeof StudentOrderRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/support': typeof StudentSupportRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -186,10 +214,14 @@ export interface FileRoutesByTo {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin/login': typeof AdminLoginRoute
+  '/student/assignments': typeof StudentAssignmentsRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
   '/student/messages': typeof StudentMessagesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/student/order': typeof StudentOrderRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/support': typeof StudentSupportRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -212,10 +244,14 @@ export interface FileRoutesById {
   '/admin/vendors': typeof AdminVendorsRoute
   '/admin/wallet': typeof AdminWalletRoute
   '/admin_/login': typeof AdminLoginRoute
+  '/student/assignments': typeof StudentAssignmentsRoute
   '/student/dashboard': typeof StudentDashboardRoute
   '/student/login': typeof StudentLoginRoute
   '/student/messages': typeof StudentMessagesRoute
+  '/student/notifications': typeof StudentNotificationsRoute
   '/student/order': typeof StudentOrderRoute
+  '/student/settings': typeof StudentSettingsRoute
+  '/student/support': typeof StudentSupportRoute
   '/student/wallet': typeof StudentWalletRoute
   '/admin/': typeof AdminIndexRoute
   '/api/public/order-status': typeof ApiPublicOrderStatusRoute
@@ -239,10 +275,14 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin/login'
+    | '/student/assignments'
     | '/student/dashboard'
     | '/student/login'
     | '/student/messages'
+    | '/student/notifications'
     | '/student/order'
+    | '/student/settings'
+    | '/student/support'
     | '/student/wallet'
     | '/admin/'
     | '/api/public/order-status'
@@ -263,10 +303,14 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin/login'
+    | '/student/assignments'
     | '/student/dashboard'
     | '/student/login'
     | '/student/messages'
+    | '/student/notifications'
     | '/student/order'
+    | '/student/settings'
+    | '/student/support'
     | '/student/wallet'
     | '/admin'
     | '/api/public/order-status'
@@ -288,10 +332,14 @@ export interface FileRouteTypes {
     | '/admin/vendors'
     | '/admin/wallet'
     | '/admin_/login'
+    | '/student/assignments'
     | '/student/dashboard'
     | '/student/login'
     | '/student/messages'
+    | '/student/notifications'
     | '/student/order'
+    | '/student/settings'
+    | '/student/support'
     | '/student/wallet'
     | '/admin/'
     | '/api/public/order-status'
@@ -306,10 +354,14 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  StudentAssignmentsRoute: typeof StudentAssignmentsRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
   StudentLoginRoute: typeof StudentLoginRoute
   StudentMessagesRoute: typeof StudentMessagesRoute
+  StudentNotificationsRoute: typeof StudentNotificationsRoute
   StudentOrderRoute: typeof StudentOrderRoute
+  StudentSettingsRoute: typeof StudentSettingsRoute
+  StudentSupportRoute: typeof StudentSupportRoute
   StudentWalletRoute: typeof StudentWalletRoute
   ApiPublicOrderStatusRoute: typeof ApiPublicOrderStatusRoute
   ApiPublicStudentAccountRoute: typeof ApiPublicStudentAccountRoute
@@ -411,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/assignments': {
+      id: '/student/assignments'
+      path: '/student/assignments'
+      fullPath: '/student/assignments'
+      preLoaderRoute: typeof StudentAssignmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/dashboard': {
       id: '/student/dashboard'
       path: '/student/dashboard'
@@ -432,11 +491,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentMessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/notifications': {
+      id: '/student/notifications'
+      path: '/student/notifications'
+      fullPath: '/student/notifications'
+      preLoaderRoute: typeof StudentNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/student/order': {
       id: '/student/order'
       path: '/student/order'
       fullPath: '/student/order'
       preLoaderRoute: typeof StudentOrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/settings': {
+      id: '/student/settings'
+      path: '/student/settings'
+      fullPath: '/student/settings'
+      preLoaderRoute: typeof StudentSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/support': {
+      id: '/student/support'
+      path: '/student/support'
+      fullPath: '/student/support'
+      preLoaderRoute: typeof StudentSupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/wallet': {
@@ -515,10 +595,14 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   AdminLoginRoute: AdminLoginRoute,
+  StudentAssignmentsRoute: StudentAssignmentsRoute,
   StudentDashboardRoute: StudentDashboardRoute,
   StudentLoginRoute: StudentLoginRoute,
   StudentMessagesRoute: StudentMessagesRoute,
+  StudentNotificationsRoute: StudentNotificationsRoute,
   StudentOrderRoute: StudentOrderRoute,
+  StudentSettingsRoute: StudentSettingsRoute,
+  StudentSupportRoute: StudentSupportRoute,
   StudentWalletRoute: StudentWalletRoute,
   ApiPublicOrderStatusRoute: ApiPublicOrderStatusRoute,
   ApiPublicStudentAccountRoute: ApiPublicStudentAccountRoute,
