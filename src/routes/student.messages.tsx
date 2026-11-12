@@ -1,8 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, MessageSquare, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { StudentShell, inputStyle, studentTheme } from "@/components/student/StudentShell";
+import { StudentShell } from "@/components/student/StudentShell";
+import { EmptyState, PageTitle, Skeleton } from "@/components/student/ui";
+import { useStudentData, useStudentUser } from "@/lib/student-data";
 
 export const Route = createFileRoute("/student/messages")({
   ssr: false,
@@ -11,46 +13,46 @@ export const Route = createFileRoute("/student/messages")({
       { title: "Messages | Unieveryhelp" },
       { name: "description", content: "Chat with Unieveryhelp support about your assignments." },
       { property: "og:title", content: "Messages | Unieveryhelp" },
-      { property: "og:description", content: "Chat with Unieveryhelp support about your assignments." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: MessagesPage,
+  component: () => (
+    <StudentShell>
+      <MessagesPage />
+    </StudentShell>
+  ),
 });
 
 type Msg = { id: string; sender_id: string | null; sender_name: string | null; body: string; created_at: string };
 
 function MessagesPage() {
-  const navigate = useNavigate();
-  const [uid, setUid] = useState("");
-  const [name, setName] = useState("Student");
+  const { user } = useStudentUser();
+  const uid = user?.id ?? "";
+  const { profile } = useStudentData(user?.id);
+  const name = profile.data?.full_name || "Student";
   const [chatId, setChatId] = useState("");
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!uid) return;
     let channel: ReturnType<typeof supabase.channel> | null = null;
     (async () => {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) return navigate({ to: "/student/login", replace: true });
-      const id = data.user.id;
-      setUid(id);
-      const { data: p } = await supabase.from("profiles").select("full_name").eq("id", id).maybeSingle();
-      if (p?.full_name) setName(p.full_name);
-      // Reuse the student's open support chat, or create one
-      let { data: c } = await supabase.from("chats").select("id").eq("student_id", id).is("order_id", null).eq("is_dispute", false).order("created_at").limit(1).maybeSingle();
+      let { data: c } = await supabase.from("chats").select("id").eq("student_id", uid).is("order_id", null).eq("is_dispute", false).order("created_at").limit(1).maybeSingle();
       if (!c) {
-        const ins = await supabase.from("chats").insert({ student_id: id, subject: "Support" }).select("id").single();
-        if (ins.error) return setError("Unable to open chat. Please try again.");
+        const ins = await supabase.from("chats").insert({ student_id: uid, subject: "Support" }).select("id").single();
+        if (ins.error) { setLoading(false); return setError("Unable to open chat. Please try again."); }
         c = ins.data;
       }
       setChatId(c.id);
       const { data: m } = await supabase.from("chat_messages").select("id, sender_id, sender_name, body, created_at").eq("chat_id", c.id).order("created_at");
       setMsgs((m ?? []) as Msg[]);
+      setLoading(false);
       channel = supabase
         .channel(`student-chat-${c.id}-${Math.random().toString(36).slice(2)}`)
         .on("postgres_changes", { event: "INSERT", schema: "public", table: "chat_messages", filter: `chat_id=eq.${c.id}` }, (payload) => {
@@ -60,7 +62,7 @@ function MessagesPage() {
         .subscribe();
     })();
     return () => { if (channel) supabase.removeChannel(channel); };
-  }, [navigate]);
+  }, [uid]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
 
@@ -78,34 +80,34 @@ function MessagesPage() {
   }
 
   return (
-    <StudentShell right={<Link to="/student/dashboard" style={{ color: studentTheme.yellow, fontWeight: 700, textDecoration: "none" }}>← Dashboard</Link>}>
-      <h1 style={{ fontSize: 22, margin: "6px 0 12px" }}>Messages</h1>
-      <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 18px rgba(10,25,49,.08)", display: "flex", flexDirection: "column", height: "calc(100vh - 170px)", minHeight: 360 }}>
-        <div style={{ flex: 1, overflowY: "auto", padding: 14 }}>
-          {!chatId && !error && <p style={{ textAlign: "center", color: "#64748b" }}><Loader2 size={18} className="animate-spin" style={{ display: "inline" }} /> Opening chat…</p>}
-          {chatId && msgs.length === 0 && <p style={{ textAlign: "center", color: "#64748b", fontSize: 14 }}>No messages yet. Say hello — our support team will reply here.</p>}
+    <>
+      <PageTitle title="Messages" sub="Chat with our support team. Replies appear here." />
+      <div className="sp-card flex flex-col overflow-hidden" style={{ height: "calc(100vh - 260px)", minHeight: 340 }}>
+        <div className="flex-1 overflow-y-auto p-4" aria-live="polite">
+          {loading && <div className="grid gap-3" role="status" aria-label="Loading"><Skeleton className="h-12 w-2/3" /><Skeleton className="ml-auto h-12 w-1/2" /><Skeleton className="h-12 w-3/5" /></div>}
+          {!loading && msgs.length === 0 && <EmptyState icon={<MessageSquare size={28} />} title="No messages yet" text="Say hello. Our support team will reply here." />}
           {msgs.map((m) => {
             const mine = m.sender_id === uid;
             return (
-              <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 8 }}>
-                <div style={{ maxWidth: "80%", padding: "8px 12px", borderRadius: 14, background: mine ? studentTheme.navy : studentTheme.paper, color: mine ? "#fff" : studentTheme.navy, border: mine ? 0 : `1px solid ${studentTheme.line}` }}>
-                  {!mine && <div style={{ fontSize: 11, fontWeight: 700, color: "#b8860b" }}>{m.sender_name || "Support"}</div>}
-                  <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 15 }}>{m.body}</div>
-                  <div style={{ fontSize: 10, opacity: 0.6, textAlign: "right", marginTop: 2 }}>{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+              <div key={m.id} className={`mb-2 flex ${mine ? "justify-end" : "justify-start"}`}>
+                <div className="max-w-[80%] rounded-2xl px-3.5 py-2" style={mine ? { background: "var(--sp-accent)", color: "var(--sp-accent-ink)" } : { background: "var(--sp-surface-2)", border: "var(--sp-border-w) solid var(--sp-line)" }}>
+                  {!mine && <div className="text-[11px] font-bold" style={{ color: "var(--sp-accent)" }}>{m.sender_name || "Support"}</div>}
+                  <div className="whitespace-pre-wrap break-words text-[14px]">{m.body}</div>
+                  <div className="mt-0.5 text-right text-[10px] opacity-70">{new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
                 </div>
               </div>
             );
           })}
           <div ref={endRef} />
         </div>
-        {error && <p role="alert" style={{ color: "#b91c1c", fontSize: 13, margin: "0 14px" }}>{error}</p>}
-        <form onSubmit={send} style={{ display: "flex", gap: 8, padding: 10, borderTop: `1px solid ${studentTheme.line}` }}>
-          <input style={inputStyle} value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" maxLength={2000} aria-label="Message" />
-          <button type="submit" disabled={sending || !text.trim()} aria-label="Send" style={{ border: 0, borderRadius: 10, background: studentTheme.yellow, color: studentTheme.navy, padding: "0 14px", cursor: "pointer", opacity: sending || !text.trim() ? 0.6 : 1 }}>
+        {error && <p role="alert" className="px-4 text-[13px]" style={{ color: "var(--sp-danger)" }}>{error}</p>}
+        <form onSubmit={send} className="sp-line flex gap-2 border-t p-3">
+          <input className="sp-field" value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message…" maxLength={2000} aria-label="Message" />
+          <button type="submit" disabled={sending || !text.trim()} aria-label="Send" className="sp-btn px-4">
             {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>
         </form>
       </div>
-    </StudentShell>
+    </>
   );
 }
